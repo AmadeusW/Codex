@@ -1,0 +1,11 @@
+Use latest ElasticSearch
+
+Commit model
+	Design
+	Declare interfaces for commit model
+	Type generator for commit model
+
+Repository importer
+	Threading/async model for repo import
+
+Fill in feature gaps

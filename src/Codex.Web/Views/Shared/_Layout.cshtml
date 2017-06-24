@@ -1,0 +1,37 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/header")
+
+</head>
+<body onload="onBodyLoad();">
+    <div class="header">
+        <span id="searchBoxAndImages">
+            <input type="text"
+                   name="name"
+                   maxlength="260"
+                   id="search-box"
+                   value=""
+                   tabindex="1" />
+            <a id="logoText" href="/">Codex</a>
+            <span id="headerMenu">
+                <a id="feedbackButtonLink" class="headerText">Feedback</a>
+                <a id="helpButtonLink" class="headerText" href="/overview/" onclick="LoadOverview(); return false;">Help</a>
+            </span>
+        </span>
+    </div>
+
+    @RenderBody()
+
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+</body>
+</html>

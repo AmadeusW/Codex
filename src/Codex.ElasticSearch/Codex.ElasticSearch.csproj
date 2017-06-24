@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SrcRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), Common.props))</SrcRoot>
+    <ProjectGuid>{4573F8BC-6B87-4526-A815-42F473452F8C}</ProjectGuid>
+    <AssemblyName>Codex.ElasticSearch</AssemblyName>
+    <RootNamespace>Codex.ElasticSearch</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(SrcRoot)\Common.props" />
+  <ItemGroup>
+    <Reference Include="Elasticsearch.Net, Version=6.0.0.0, Culture=neutral, PublicKeyToken=96c599bbe3e70f5d, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Elasticsearch.Net.6.0.0-alpha1\lib\net46\Elasticsearch.Net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Nest, Version=6.0.0.0, Culture=neutral, PublicKeyToken=96c599bbe3e70f5d, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\NEST.6.0.0-alpha1\lib\net46\Nest.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.10.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Codex.Sdk\Codex.Sdk.csproj">
+      <Project>{2322a932-05f4-4931-8547-71377c6ab49e}</Project>
+      <Name>Codex.Sdk</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DataModel\Attributes.cs" />
+    <Compile Include="DataModel\ClassificationListModel.cs" />
+    <Compile Include="DataModel\DataBehavior.cs" />
+    <Compile Include="DataModel\DataInclusion.cs" />
+    <Compile Include="DataModel\IntegerListModel.cs" />
+    <Compile Include="DataModel\LanguageModel.cs" />
+    <Compile Include="DataModel\ProjectModel.cs" />
+    <Compile Include="DataModel\PropertyModel.cs" />
+    <Compile Include="DataModel\ReferenceListModel.cs" />
+    <Compile Include="DataModel\RepositoryModel.cs" />
+    <Compile Include="DataModel\SearchModelBase.cs" />
+    <Compile Include="DataModel\SourceFileModel.cs" />
+    <Compile Include="DataModel\SpanListModel.cs" />
+    <Compile Include="DataModel\SpanModel.cs" />
+    <Compile Include="DataModel\SymbolLineSpanListModel.cs" />
+    <Compile Include="DataModel\SymbolModel.cs" />
+    <Compile Include="DataModel\SymbolReferenceModel.cs" />
+    <Compile Include="DataModel\SymbolSearchModel.cs" />
+    <Compile Include="ElasticProviders\CustomAnalyzers.cs" />
+    <Compile Include="ElasticProviders\ElasticProvider.cs" />
+    <Compile Include="ElasticProviders\ElasticProviderConfig.cs" />
+    <Compile Include="ElasticProviders\ElasticProviderException.cs" />
+    <Compile Include="ElasticProviders\ElasticResponse.cs" />
+    <Compile Include="ElasticProviders\ElasticUtility.cs" />
+    <Compile Include="ElasticProviders\ResponseValidator.cs" />
+    <Compile Include="ElasticsearchStorage.cs" />
+    <Compile Include="MemoryStorage.cs" />
+    <Compile Include="ModelConverter.cs" />
+    <Compile Include="Utilities\ArrayUtils.cs" />
+    <Compile Include="Utilities\FullTextUtilities.cs" />
+    <Compile Include="Utilities\NumberUtils.cs" />
+    <Compile Include="Utilities\SearchResultSorter.cs" />
+    <Compile Include="Utilities\SearchUtilities.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SrcRoot)\Common.targets" />
+</Project>

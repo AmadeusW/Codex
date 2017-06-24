@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SrcRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), Common.props))</SrcRoot>
+    <ProjectGuid>{2322A932-05F4-4931-8547-71377C6AB49E}</ProjectGuid>
+    <AssemblyName>Codex.Sdk</AssemblyName>
+    <RootNamespace>Codex.Sdk</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(SrcRoot)\Common.props" />
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Analysis\IAnalysisTarget.cs" />
+    <Compile Include="Logging\ConsoleLogger.cs" />
+    <Compile Include="Logging\Logger.cs" />
+    <Compile Include="Logging\MultiLogger.cs" />
+    <Compile Include="Logging\TextLogger.cs" />
+    <Compile Include="ObjectModel\AnalyzedProject.cs" />
+    <Compile Include="ObjectModel\BoundSourceFile.cs" />
+    <Compile Include="ObjectModel\Classification.cs" />
+    <Compile Include="ObjectModel\EnumEx.cs" />
+    <Compile Include="ObjectModel\FileSystemSourceFile.cs" />
+    <Compile Include="ObjectModel\Glyph.cs" />
+    <Compile Include="ObjectModel\IStorage.cs" />
+    <Compile Include="ObjectModel\LanguageDescriptor.cs" />
+    <Compile Include="ObjectModel\ProjectKind.cs" />
+    <Compile Include="ObjectModel\ReferenceKind.cs" />
+    <Compile Include="ObjectModel\Repository.cs" />
+    <Compile Include="ObjectModel\SymbolId.cs" />
+    <Compile Include="ObjectModel\SymbolKind.cs" />
+    <Compile Include="ObjectModel\Symbols.cs" />
+    <Compile Include="Types\Attributes.cs" />
+    <Compile Include="Types\Language.cs" />
+    <Compile Include="Types\Commit.cs" />
+    <Compile Include="Types\Common.cs" />
+    <Compile Include="Types\File.cs" />
+    <Compile Include="Types\Project.cs" />
+    <Compile Include="Types\Repository.cs" />
+    <Compile Include="Types\Scopes.cs" />
+    <Compile Include="Types\SearchTypes.cs" />
+    <Compile Include="Types\Symbol.cs" />
+    <Compile Include="Utilities\CollectionUtilities.cs" />
+    <Compile Include="Utilities\ComparerBuilder.cs" />
+    <Compile Include="Utilities\CompilerUtilities.cs" />
+    <Compile Include="Utilities\EqualityComparerBuilder.cs" />
+    <Compile Include="Utilities\IIndexable.cs" />
+    <Compile Include="Utilities\IndexableListAdapter.cs" />
+    <Compile Include="Utilities\IndexableSpanListAdapter.cs" />
+    <Compile Include="Utilities\IndexingUtilities.cs" />
+    <Compile Include="Utilities\IntHelpers.cs" />
+    <Compile Include="Utilities\ISpanList.cs" />
+    <Compile Include="Utilities\ListSegment.cs" />
+    <Compile Include="Utilities\MultiDictionary.cs" />
+    <Compile Include="Utilities\MurmurHash.cs" />
+    <Compile Include="Utilities\Paths.cs" />
+    <Compile Include="Utilities\PathUtilities.cs" />
+    <Compile Include="Utilities\Range.cs" />
+    <Compile Include="Utilities\RangeHelper.cs" />
+    <Compile Include="Utilities\SpanUtilities.cs" />
+    <Compile Include="Utilities\TaskUtilities.cs" />
+    <Compile Include="Utilities\TextUtilities.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SrcRoot)\Common.targets" />
+</Project>

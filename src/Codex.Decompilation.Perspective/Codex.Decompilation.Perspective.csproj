@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SrcRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), Common.props))</SrcRoot>
+    <ProjectGuid>{94BDF7DC-169D-41D7-9FC8-081A9D1D56D2}</ProjectGuid>
+    <AssemblyName>Codex.Decompilation.Perspective</AssemblyName>
+    <RootNamespace>Codex.Decompilation.Perspective</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(SrcRoot)\Common.props" />
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SrcRoot)\Common.targets" />
+</Project>

@@ -1,0 +1,12 @@
+﻿@model string
+
+@if (Model == null)
+{
+    <div class='note'>
+        Admin panel.
+    </div>
+}
+else
+{
+    @Html.Raw(@Model)
+}

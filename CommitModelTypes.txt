@@ -1,0 +1,16 @@
+Language
+	Name/Id
+	DisplayName
+	ClassificationTypes
+	ReferenceTypes
+
+ClassificationType
+	Id
+	DefaultClassificationColor
+
+ReferenceType
+	Id
+	DisplayName ?
+
+
+Reference

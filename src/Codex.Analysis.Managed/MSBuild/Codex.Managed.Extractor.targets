@@ -1,0 +1,75 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- The purpose of these targets is to extract CSC/VBC command line args for use by Codex -->
+  <!--
+    Instructions for extraction:
+    Run MSBuild so that these targets are included. This can be done by providing these targets as extension imports
+    via the following properties (environment or global)
+    
+    NOTE: Certain codebases may rely on any (maybe all) of these values being set to
+    custom values. In those cases, these targets will need to be included via another
+    import extension point. As a last resort, MSBuild workspace can be used
+  
+    Optimization Note: 
+    SkipCompilerExecution=true can be specified if successful build was already done to bypass
+    compiler invocations
+  
+    Required:
+    
+    // Root of repository being indexed
+    set ExtractionSourceRoot=
+  
+    Common:
+    set CustomBeforeMicrosoftCommonTargets=
+    set CustomAfterMicrosoftCommonTargets=
+    
+    VB Only:
+    set CustomAfterMicrosoftVisualBasicTargets=
+    
+    CSharp Only:
+    set CustomAfterMicrosoftCSharpTargets=
+  
+    TODO: There are likely more extension points to use. Add here for convenience.
+    TODO: Add logger which accomplishes the same goal
+  -->
+  
+  <PropertyGroup>
+    <!-- Ensure compiler provides command line args -->
+    <ProvideCommandLineArgs>true</ProvideCommandLineArgs>
+
+    <!-- Force CoreCompile to execute (this file is declared as an output to core compile
+         for use of forcing the MSBuild up to date check to force core compile to run)-->
+    <NonExistentFile>__NonExistentSubDir__\__NonExistentFile__</NonExistentFile>
+  </PropertyGroup>
+
+  <Target Name="ExtractCommandLineArgs"
+          AfterTargets="CoreCompile">
+
+    <PropertyGroup>
+      <CodexProjectName>$(MSBuildProjectName)</CodexProjectName>
+      <CodexProjectExtractionDirectory>$(ExtractionSourceRoot)\.vs\Codex\projects\$(CodexProjectName)</CodexProjectExtractionDirectory>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <CodexProjectData Include="ProjectPath=$(MSBuildProjectFullPath)" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(CodexProjectExtractionDirectory)" />
+
+    <WriteLinesToFile Condition="'@(CscCommandLineArgs->Count())' != '0'"
+                  Lines="@(CodexProjectData)"
+                  File="$(CodexProjectExtractionDirectory)\proj.txt"
+                  Overwrite="true" />
+    
+    <WriteLinesToFile Condition="'@(CscCommandLineArgs->Count())' != '0'" 
+                      Lines="@(CscCommandLineArgs)" 
+                      File="$(CodexProjectExtractionDirectory)\csc.args.txt" 
+                      Overwrite="true" />
+
+    <WriteLinesToFile Condition="'@(VbcCommandLineArgs->Count())' != '0'"
+                      Lines="@(VbcCommandLineArgs)"
+                      File="$(CodexProjectExtractionDirectory)\vbc.args.txt"
+                      Overwrite="true" />
+  </Target>
+  
+</Project>

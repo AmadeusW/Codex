@@ -1,0 +1,42 @@
+﻿@model WebUI.Models.StateModel
+
+<div id="main">
+    <div id="leftPane">
+    </div>
+
+    <div id="rightPane">
+    </div>
+</div>
+
+<script>
+    var codexWebRootPrefix = @Html.Raw(ViewContext.GetRootPrefix());
+
+    var currentState = {
+        leftProjectId: null,
+        rightProjectId: null,
+        filePath: null,
+        leftSymbolId: null,
+        rightSymbolId: null,
+        lineNumber: null,
+        windowTitle: 'Index',
+        searchText: null,
+        leftPaneContent: null,
+        rightPaneContent: null,
+    };
+    var initialState = {
+        leftProjectId: @Html.Raw(Model.leftProjectId),
+        rightProjectId: @Html.Raw(Model.rightProjectId),
+        filePath: @Html.Raw(Model.filePath),
+        leftSymbolId: @Html.Raw(Model.leftSymbolId),
+        rightSymbolId: @Html.Raw(Model.rightSymbolId),
+        lineNumber: @Html.Raw(Model.lineNumber),
+        windowTitle: @Html.Raw(Model.windowTitle),
+        searchText: @Html.Raw(Model.searchText),
+        leftPaneContent: @Html.Raw(Model.leftPaneContent),
+        rightPaneContent: @Html.Raw(Model.rightPaneContent),
+    };
+    ensureSearchBox();
+    DisplayState(initialState);
+    ReplaceCurrentState();
+    var selectedFile = null;
+</script>

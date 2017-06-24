@@ -1,0 +1,51 @@
+﻿@model EditorModel
+
+@if (Model == null || Model.Error != null)
+{
+    <div class='note'>
+        @(Model != null ? Model.Error : "Error retrieving source")
+    </div>
+}
+else
+{
+    var webLink = Model.WebLink;
+
+    <div id="editorPaneWrapper">
+        <div id="editorPane" class="cz" data-filepath="@Model.FilePath">
+            <table class="tb" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td valign="top" align="right"><pre id="ln">@Html.Raw(@Model.LineNumberText)</pre></td>
+                    <td valign="top" align="left"><pre id="sourceCode">@Html.Raw(@Model.Text)</pre></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div id="bottomPane" class="dH">
+        <table style="width: 100%">
+            <tbody>
+                <tr>
+                    <td>
+                        File:&nbsp;<a id="filePathLink" class="blueLink" href="/?leftProject=@Model.ProjectId&file=@HttpUtility.UrlEncode(Model.FilePath)" target="_blank" title="Click to open file in a new tab">@Model.FilePath</a>&nbsp;(<a id="fileDownloadLink" class="blueLink" href="/download/@Model.ProjectId/?filePath=@HttpUtility.UrlEncode(Model.FilePath)" title="Click to download the file">Download</a>)
+                    </td>
+                    @if (!string.IsNullOrEmpty(webLink))
+                    {
+                        <td style="text-align: right;">
+                            <a id="webAccessLink" style="margin-right: 16px;" class="blueLink" href="@HttpUtility.HtmlAttributeEncode(webLink)" target="_blank">@HttpUtility.HtmlAttributeEncode(Model.RepoRelativePath ?? "Source Control")</a>
+                        </td>
+                    }
+                    else if (!string.IsNullOrEmpty(Model.RepoRelativePath))
+                    {
+                        <td style="text-align: right;">
+                            <div style="margin-right: 16px;">@HttpUtility.HtmlAttributeEncode(Model.RepoRelativePath)</div>
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    <td>
+                        Project:&nbsp;<a id="projectExplorerLink" class="blueLink" href="/?leftProject=@Model.ProjectId" onclick="if (event.button === 0) { LoadProjectExplorer('@Model.ProjectId'); return false; }">@Model.ProjectId</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+}

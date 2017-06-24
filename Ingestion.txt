@@ -1,0 +1,8 @@
+Decouple text and semantic ingestion
+
+Text ingestion must be performed along with or prior to semantic ingestion
+
+Ingestion kinds:
+
+Source Control Ingestion - adding commits/changesets from various branches in a source control repository
+	This approach is modeled after git commits. Commits point to a description

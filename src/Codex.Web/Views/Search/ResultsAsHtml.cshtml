@@ -1,0 +1,65 @@
+﻿@using Codex.ObjectModel
+@using Codex.Storage
+@using WebUI.Util
+
+@model SymbolSearchResult
+
+@{
+    if (Model == null || Model.Entries.Count == 0)
+    {
+        <div class="note">No results found.</div>
+    }
+    else if (Model != null && Model.Error != null)
+    {
+        <div class="note">@Model.Error</div>
+    }
+    else
+    {
+        var results = Model.Entries
+            .GroupBy(sr => sr.Symbol.ProjectId)
+            .OrderBy(g => g.First(), SearchResultSorter.SymbolComparer);
+        var resultCount = Model.Entries.Count;
+        var resultCountText = resultCount == 1 ? "1 result found:" : resultCount + " results found:";
+        if (resultCount < Model.Total)
+        {
+            resultCountText = $"Displaying top {resultCount} results out of {Model.Total}:";
+        }
+
+        <div>
+            <div class="note"><a class="blueLink" href="/?query=@HttpUtility.UrlEncode(Model.QueryText)">@resultCountText</a></div>
+            <div>
+                @{
+                    // Group by the project ID so we show all results for a project under a single header
+                    foreach (IGrouping<string, SymbolSearchResultEntry> searchResultGrouping in results)
+                    {
+                        <div class="resultGroup">
+                            <div class="resultGroupHeader" onClick="ToggleExpandCollapse(this);">
+                                <div class="resultGroupAssemblyName">@searchResultGrouping.Key</div>
+                            </div><div id="@searchResultGrouping.Key">
+                                @foreach (SymbolSearchResultEntry searchResult in searchResultGrouping)
+                                {
+                                    if (!string.IsNullOrEmpty(searchResult.File))
+                                    {
+                                        <a onclick="LoadSourceCode('@searchResult.Symbol.ProjectId.AsJavaScriptStringEncoded()', '@searchResult.File.AsJavaScriptStringEncoded()', '@searchResult.Symbol.Id');return false;" href="/?query=@HttpUtility.UrlEncode(Model.QueryText)&rightProject=@searchResult.Symbol.ProjectId&rightSymbol=@searchResult.Symbol.Id">
+                                            <div class="resultItem">
+                                                <img src="/content/icons/@searchResult.Glyph" height="16" width="16" /><div class="resultKind">@searchResult.Symbol.Kind.ToLowerInvariant()</div><div class="resultName">@searchResult.Symbol.ShortName</div><div class="resultDescription">@searchResult.DisplayName</div>
+                                            </div>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a onclick="R('@searchResult.Symbol.ProjectId.AsJavaScriptStringEncoded()', '@searchResult.File.AsJavaScriptStringEncoded()', '@searchResult.Symbol.Id');return false;" href="/?leftProject=@searchResult.Symbol.ProjectId&leftSymbol=@searchResult.Symbol.Id">
+                                            <div class="resultItem">
+                                                <img src="/content/icons/@searchResult.Glyph" height="16" width="16" /><div class="resultKind">@searchResult.Symbol.Kind.ToLowerInvariant()</div><div class="resultName">@searchResult.Symbol.ShortName</div><div class="resultDescription">@searchResult.DisplayName</div>
+                                            </div>
+                                        </a>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    }
+}

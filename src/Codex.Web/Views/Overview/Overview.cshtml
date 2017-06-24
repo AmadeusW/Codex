@@ -1,0 +1,103 @@
+﻿<div style="overflow: auto">
+    <h1>Browse source code, with full text search and semantic navigation.</h1>
+    <h3>Full Text Search</h3>
+    <p>If no symbol results for the given search string are found, full text search is performed instead. To force results to full text search only, prefix the search string with a backtick `.</p>
+    <h3>Find symbols</h3>
+    <table class="ex">
+        <thead>
+            <tr>
+                <td class="ex">Search for:</td>
+                <td class="ex">Examples</td>
+            </tr>
+        </thead>
+        <tr>
+            <td class="ex">
+                <div>Full or partial type or member name.</div>
+                <div>By default, the string needs to be a prefix, "Builder" won't find "StringBuilder", but will find "BuilderType". However, by prepending the query with the '*' character a partial match can be found. "*Builder" would find "BuilderType" and "StringBuilder", but not "Rebuilder", since fragments of the string are only processed at case boundaries.</div>
+                @*<div>Use quotes to find exact string (turns off prefix search).</div>*@
+            </td>
+            <td class="ex">
+                <div><a class="blueLink" href="/?query=BitConverter" target="_top">BitConverter</a></div>
+                <div><a class="blueLink" href="/?query=System.Console" target="_top">System.Console</a></div>
+                @*<div><a class="blueLink" href="/?query=Debug.Asse" target="_top">Debug.Asse</a></div>*@
+                @*<div><a class="blueLink" href="/?query=%22StringBuilder%22" target="_top">"StringBuilder"</a></div>*@
+            </td>
+        </tr>
+        @*<tr>
+                <td class="ex">Use "assembly" prefix to search for assembly names.</td>
+                <td class="ex">
+                    <div><a class="blueLink" href="/#query=assembly%20System." target="_top">assembly System.</a></div>
+                </td>
+            </tr>*@
+        <tr>
+            <td class="ex">
+                <div>Use a keyword to filter by member type:</div>
+                <div><span class="k">assembly</span>, <span class="k">type</span>, <span class="k">class</span>, <span class="k">struct</span>, <span class="k">interface</span>, <span class="k">enum</span>, <span class="k">delegate</span>, <span class="k">method</span>, <span class="k">property</span>, <span class="k">event</span>, <span class="k">field</span>, <span class="k">file</span></div>
+            </td>
+            <td class="ex">
+                <div><a class="blueLink" href="/?query=class%20Assembly" target="_top">class&nbsp;Assembly</a></div>
+                <div><a class="blueLink" href="/?query=struct%20DateTime" target="_top">struct&nbsp;DateTime</a></div>
+                <div><a class="blueLink" href="/?query=interface%20IQueryable" target="_top">interface IQueryable</a></div>
+            </td>
+        </tr>
+        <tr>
+                <td class="ex">Add words separated by space to filter results to only those that contain all of the words. Can also filter by assembly name.</td>
+                <td class="ex">
+                    <div><a class="blueLink" href="/?query=StringBuilder%20mscorlib" target="_top">StringBuilder mscorlib</a></div>
+                </td>
+        </tr>
+        <tr>
+            <td class="ex">Find files.</td>
+            <td class="ex">
+                <div><a class="blueLink" href="/?query=Enumerable.cs" target="_top">Enumerable.cs</a></div>
+            </td>
+        </tr>
+    </table>
+    <h3>Easy hyperlinks to everything you see on the screen (just copy the address bar text)</h3>
+    <p>Click on a line number to get a hyperlink to that particular line.</p>
+    <h3>Features</h3>
+    <table class="ex">
+        <thead>
+            <tr>
+                <td class="ex">Feature</td>
+                <td class="ex">Description</td>
+            </tr>
+        </thead>
+        <tr>
+            <td class="ex">Go&nbsp;To&nbsp;Definition</td>
+            <td class="ex">
+                Click any identifier to go to definition.
+            </td>
+        </tr>
+        <tr>
+            <td class="ex">Find&nbsp;All&nbsp;References</td>
+            <td class="ex">
+                Click the symbol name in definition to find all references. Find References also shows derived types, interface implementations, base members, overriding and overridden members, class instantiations and field or property writes separately.
+            </td>
+        </tr>
+        <tr>
+                <td class="ex">Highlight&nbsp;References</td>
+                <td class="ex">
+                    Click on a local variable, parameter or type parameter to highlight all references inline in source.
+                </td>
+        </tr>
+        <tr>
+            <td class="ex"><span style="white-space: nowrap"><img style="vertical-align: top; margin-right: 16px" src="content/icons/DocumentOutline.png" />Document&nbsp;Outline</span></td>
+            <td class="ex">
+                In the document view, show the list of types and members in the file.
+            </td>
+        </tr>
+        <tr>
+            <td class="ex"><span style="white-space: nowrap"><img style="vertical-align: top; margin-right: 16px" src="content/icons/CSharpProjectExplorer.png" />Project&nbsp;Explorer</span></td>
+            <td class="ex">
+                Display the tree view of files in the current project/assembly. References and Used By folders list dependent and depending assemblies (not available for mscorlib).
+            </td>
+        </tr>
+        @*<tr>
+                <td class="ex"><span style="white-space: nowrap"><img style="vertical-align: top; margin-right: 16px" src="content/icons/NamespaceExplorer.png" />Namespace&nbsp;Explorer</span></td>
+                <td class="ex">
+                    Namespaces and types in the current project/assembly.
+                </td>
+            </tr>*@
+    </table>
+</div>
