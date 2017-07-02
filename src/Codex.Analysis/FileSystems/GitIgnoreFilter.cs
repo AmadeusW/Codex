@@ -21,7 +21,7 @@ namespace Codex.Analysis.FileSystems
             GitIgnore gitIgnore;
             PopulateGitIgnore(fileSystem, ref gitIgnoreDirectoryPath, out gitIgnore);
 
-            var result = Include(directoryPath, gitIgnoreDirectoryPath ?? string.Empty, gitIgnore);
+            var result = Include(directoryPath, gitIgnoreDirectoryPath ?? string.Empty, gitIgnore, isDirectory: true);
             return result;
         }
 
@@ -102,7 +102,7 @@ namespace Codex.Analysis.FileSystems
             return Include(filePath, gitIgnore.Key, gitIgnore.Value);
         }
 
-        private bool Include(string filePath, string gitIgnoreDirectoryPath, GitIgnore gitIgnore)
+        private bool Include(string filePath, string gitIgnoreDirectoryPath, GitIgnore gitIgnore, bool isDirectory = false)
         {
             var originalFilePath = filePath;
 
@@ -127,6 +127,11 @@ namespace Codex.Analysis.FileSystems
             filePath = filePath.Substring(startIndex);
 
             var include = !gitIgnore.Excludes(filePath);
+            if (isDirectory && include)
+            {
+                include = !gitIgnore.Excludes(filePath + '/');
+            }
+
             if (!include)
             {
                 Console.WriteLine("Ignoring: " + originalFilePath);

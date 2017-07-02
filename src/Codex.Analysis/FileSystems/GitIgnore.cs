@@ -136,6 +136,10 @@ namespace Codex
                 line = line.Substring(1);
                 prefixMatch = true;
             }
+            else if (!tfIgnore && line.StartsWith("**/"))
+            {
+                line = line.Substring(3);
+            }
 
             bool matchFileOrDirectory = line[line.Length - 1] != '/';
 
@@ -149,7 +153,8 @@ namespace Codex
             else
             {
                 line = line.Replace("?", "\\?");
-                line = line.Replace("**", "(.+)").Replace("*", "[^\\/]+");
+                line = line.Replace("**", "(.+)");
+                line = line.Replace("*", "(([^\\/]+)|$)");
             }
 
 
