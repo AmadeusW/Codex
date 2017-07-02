@@ -992,8 +992,7 @@ namespace Codex.Storage.ElasticProviders
                          // TODO: Need to sort here and above
                          .Sort(sfd => sfd.Field(sf => sf
                             .Field(sr => sr.Reference.ReferenceKind)
-                            .Order(SortOrder.Ascending)
-                            .IgnoreUnmappedFields()))
+                            .Order(SortOrder.Ascending)))
                          .Index(indices)
                          .Take(maxNumberOfItems.Value))
                 ).ThrowOnFailure();
