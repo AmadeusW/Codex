@@ -45,6 +45,11 @@ namespace Codex.Analysis
 
             public XElement GetNamespaceElement(XElement parent)
             {
+                if (NamespaceElement?.Parent != parent)
+                {
+                    NamespaceElement = null;
+                }
+
                 NamespaceElement = NamespaceElement ?? parent.CreateChild("Namespace", el => el.AddAttribute("Name", Namespace));
                 return NamespaceElement;
             }
@@ -53,10 +58,15 @@ namespace Codex.Analysis
         public NamespaceExtensionData GetReferenceNamespaceData(string nspaceId)
         {
             var namespaceSymbol = ReferenceDefinitionMap[nspaceId];
-            var extData = m_extensionData.GetOrAdd(nspaceId, k => new NamespaceExtensionData());
-            extData.Namespace = namespaceSymbol.DisplayName;
-            extData.Qualifier = namespaceSymbol.DisplayName + ".";
-            namespaceSymbol.ExtData = extData;
+            NamespaceExtensionData extData = namespaceSymbol.ExtData as NamespaceExtensionData;
+            if (extData == null)
+            {
+                extData = m_extensionData.GetOrAdd(nspaceId, k => new NamespaceExtensionData());
+                extData.Namespace = namespaceSymbol.DisplayName;
+                extData.Qualifier = namespaceSymbol.DisplayName + ".";
+                namespaceSymbol.ExtData = extData;
+            }
+
             return extData;
         }
 

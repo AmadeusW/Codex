@@ -157,7 +157,6 @@ namespace Codex
                 line = line.Replace("*", "(([^\\/]+)|$)");
             }
 
-
             if (!prefixMatch)
             {
                 line = "((.+)\\/)?" + line;
