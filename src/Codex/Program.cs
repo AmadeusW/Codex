@@ -29,6 +29,7 @@ namespace Codex.Application
 
         static void Main(string[] args)
         {
+            if (args.Length != 2) throw new ArgumentException("Usage: codex repoName repoPath");
             RunRepoImporter(args);
 
             if (!analysisOnly)
@@ -39,7 +40,6 @@ namespace Codex.Application
 
         static void RunRepoImporter(params string[] args)
         {
-
             string repoName = args[0];
             string rootDirectory = args[1];
             var targetIndexName = AnalysisServices.GetTargetIndexName(repoName);
