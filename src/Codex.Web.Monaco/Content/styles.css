@@ -890,3 +890,7 @@ ol a, ol a:link, ol a:hover, ol a:focus, ol a:active,
 .activeresult {
     background-color: lime;
 }
+
+.highlightLine {
+	background: whitesmoke;
+}

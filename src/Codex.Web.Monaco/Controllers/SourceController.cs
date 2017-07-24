@@ -4,9 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Mvc;
+using System.Web.Mvc.Html;
+using System.Web.Razor.Parser.SyntaxTree;
 using Codex.ObjectModel;
 using Codex.Utilities;
+using Codex.Web.Monaco.Models;
+using Codex.Web.Monaco.Util;
 using WebUI.Rendering;
+using Span = Codex.Web.Monaco.Models.Span;
 
 namespace WebUI.Controllers
 {
@@ -43,6 +48,57 @@ namespace WebUI.Controllers
         public SourceController(IStorage storage)
         {
             Storage = storage;
+        }
+
+        [Route("repos/{repoName}/sourcecontent/{projectId}")]
+        [Route("sourcecontent/{projectId}")]
+        public async Task<ActionResult> Contents(string projectId, string filename)
+        {
+            try
+            {
+                Requests.LogRequest(this);
+
+                if (string.IsNullOrEmpty(filename))
+                {
+                    return this.HttpNotFound();
+                }
+
+                return WrapTheModel(await GetSourceFileAsync(projectId, filename));
+            }
+            catch (Exception ex)
+            {
+                return Responses.Exception(ex);
+            }
+        }
+
+        private JsonResult WrapTheModel(SourceFileContentsModel model)
+        {
+            if (model == null)
+            {
+                return new JsonResult();
+            }
+
+            return new JsonResult()
+            {
+                JsonRequestBehavior = JsonRequestBehavior.AllowGet,
+                Data = model,
+            };
+        }
+
+        private async Task<SourceFileContentsModel> GetSourceFileAsync(string projectId, string filename)
+        {
+            var boundSourceFile = await Storage.GetBoundSourceFileAsync(this.GetSearchRepos(), projectId, filename);
+            if (boundSourceFile == null)
+            {
+                return null;
+            }
+
+            Responses.PrepareResponse(Response);
+
+            return new SourceFileContentsModel()
+            {
+                contents = await boundSourceFile.SourceFile.GetContentsAsync(),
+            };
         }
 
         [Route("repos/{repoName}/source/{projectId}")]
@@ -90,10 +146,8 @@ namespace WebUI.Controllers
                 {
                     return PartialView("~/Views/Source/Index.cshtml", (object)model);
                 }
-                else
-                {
-                    return View((object)model);
-                }
+
+                return View((object)model);
             }
             catch (Exception ex)
             {
@@ -124,6 +178,80 @@ namespace WebUI.Controllers
                 {
                     var definitionReference = definitions.Entries[0];
                     return await Index(definitionReference.ReferringProjectId, definitionReference.File, partial: true);
+                }
+                else
+                {
+                    var definitionResult = await Storage.GetDefinitionsAsync(this.GetSearchRepos(), projectId, symbolId);
+                    var symbolName = definitionResult?.FirstOrDefault()?.Span.Definition.DisplayName ?? symbolId;
+                    definitions.SymbolName = symbolName ?? definitions.SymbolName;
+
+                    if (definitions.Entries.Count == 0)
+                    {
+                        definitions = await Storage.GetReferencesToSymbolAsync(
+                            this.GetSearchRepos(),
+                            new Symbol()
+                            {
+                                ProjectId = projectId,
+                                Id = SymbolId.UnsafeCreateWithValue(symbolId)
+                            });
+                    }
+
+                    var referencesText = ReferencesController.GenerateReferencesHtml(definitions);
+                    if (string.IsNullOrEmpty(referencesText))
+                    {
+                        referencesText = "No defintions found.";
+                    }
+                    else
+                    {
+                        referencesText = "<!--Definitions-->" + referencesText;
+                    }
+
+                    Responses.PrepareResponse(Response);
+
+                    return PartialView("~/Views/References/References.cshtml", referencesText);
+                }
+            }
+            catch (Exception ex)
+            {
+                return Responses.Exception(ex);
+            }
+        }
+
+        [Route("definitionscontents/{projectId}")]
+        public async Task<ActionResult> GoToDefinitionGetContentAsync(string projectId, string symbolId)
+        {
+            try
+            {
+                Requests.LogRequest(this);
+
+                var definitions = await Storage.GetReferencesToSymbolAsync(
+                    this.GetSearchRepos(),
+                    new Symbol()
+                    {
+                        ProjectId = projectId,
+                        Id = SymbolId.UnsafeCreateWithValue(symbolId),
+                        Kind = nameof(ReferenceKind.Definition)
+                    });
+
+                definitions.Entries = definitions.Entries.Distinct(m_referenceEquator).ToList();
+
+                if (definitions.Entries.Count == 1)
+                {
+                    var definitionReference = definitions.Entries[0];
+                    var sourceFile = await GetSourceFileAsync(definitionReference.ReferringProjectId, definitionReference.File);
+                    if (sourceFile != null)
+                    {
+                        var referringSpan = definitions.Entries[0].ReferringSpan;
+                        var position = new Span()
+                        {
+                            lineNumber = referringSpan.LineNumber + 1,
+                            column = referringSpan.LineSpanEnd + 1,
+                            length = referringSpan.Length,
+                        };
+                        sourceFile.position = position;
+                    }
+
+                    return WrapTheModel(sourceFile);
                 }
                 else
                 {

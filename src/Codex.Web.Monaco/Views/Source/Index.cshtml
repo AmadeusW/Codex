@@ -9,17 +9,12 @@
 else
 {
     var webLink = Model.WebLink;
-
-    <div id="editorPaneWrapper">
-        <div id="editorPane" class="cz" data-filepath="@Model.FilePath">
-            <table class="tb" cellpadding="0" cellspacing="0">
-                <tr>
-                    <td valign="top" align="right"><pre id="ln">@Html.Raw(@Model.LineNumberText)</pre></td>
-                    <td valign="top" align="left"><pre id="sourceCode">@Html.Raw(@Model.Text)</pre></td>
-                </tr>
-            </table>
+    <div id="editorPaneWrapper"style="height: 100%">
+        <div id="editorPane" class="cz" data-filepath="@Model.FilePath" style="width:100%;height:100%;border:1px solid grey">
+            
         </div>
     </div>
+
     <div id="bottomPane" class="dH">
         <table style="width: 100%">
             <tbody>

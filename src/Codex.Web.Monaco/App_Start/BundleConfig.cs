@@ -15,6 +15,7 @@ namespace WebUI
                         "~/Scripts/jquery.validate*"));
 
             bundles.Add(new ScriptBundle("~/bundles/header").Include(
+                "~/node_modules/monaco-editor/dev/vs/loader.js",
                 "~/Scripts/search.js",
                 "~/Scripts/split.js",
                 "~/Scripts/scripts.js"));

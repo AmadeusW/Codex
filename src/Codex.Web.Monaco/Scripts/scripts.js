@@ -1,4 +1,87 @@
 var defaultWindowTitle = "Index";
+var editor;
+
+function ensureEditorIsCreated(valueFactory) {
+    editor = undefined;
+    if (!editor) {
+        require.config({ paths: { 'vs': 'node_modules/monaco-editor/dev/vs' } });
+        var editorPane = document.getElementById('editorPane');
+        if (editorPane) {
+            require(['vs/editor/editor.main'],
+                function () {
+
+                    var value = valueFactory();
+                    editor = monaco.editor.create(editorPane,
+                    {
+                        value: value.contents,
+                        language: 'csharp',
+                                        readOnly: true,
+                                        lineNumbers: true,
+                                        scrollBeyondLastLine: true,
+                                        roundedSelection: true
+                    });
+                    
+                    editor.focus();
+                    var position = { lineNumber: value.position.lineNumber, column: value.position.column };
+                    editor.revealPositionInCenter(position);
+                    editor.setPosition(position);
+                    editor.deltaDecorations([], [{ range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1), options: { className: 'highlightLine', isWholeLine: true } }])
+                    editor.setSelection({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column + value.position.length });
+                    
+
+                });
+        }
+    } else {
+        editor.setValue("asdfasdfa");
+        //editor.render();
+        //editor.getModel()._lines = ["asdf", "asdf"];
+        //editor.setValue(valueFactory());
+    }
+}
+
+function loadMonacoEditor() {
+
+    return;
+    require.config({ paths: { 'vs': 'node_modules/monaco-editor/dev/vs' } });
+    var editorPane = document.getElementById('editorPane');
+    if (editorPane) {
+        require(['vs/editor/editor.main'],
+            function() {
+                editor = monaco.editor.create(editorPane,
+                {
+                    value: "Newly loaded",
+                    language: 'javascript'
+                });
+            });
+    }
+}
+
+function loadMonacoEditorWithContent(content) {
+    ensureEditorIsCreated(function() { return content; });
+
+    //if (editor) {
+
+    //    editor.setValue(content);
+    //    editor.render();
+    //}
+    //require.config({ paths: { 'vs': 'node_modules/monaco-editor/dev/vs' } });
+    //var editorPane = document.getElementById('editorPane');
+    //if (editorPane) {
+    //    require(['vs/editor/editor.main'],
+    //        function () {
+    //            editor = monaco.editor.create(editorPane,
+    //            {
+    //                value: content,
+    //                language: 'csharp',
+    //                readOnly: true,
+    //                lineNumbers: true,
+    //                scrollBeyondLastLine: true,
+    //                roundedSelection: true
+    //            });
+    //        });
+    //}
+}
+
 
 function ReplaceCurrentState() {
     history.replaceState(currentState, currentState.windowTitle, getUrlForState(currentState));
@@ -122,6 +205,7 @@ function setRightPane(text) {
 
     var rightPane = document.getElementById("rightPane");
     rightPane.innerHTML = text;
+    loadMonacoEditor();
 }
 
 function setPageTitle(title) {
@@ -191,12 +275,17 @@ function LoadDefinition(project, symbolId) {
 function LoadDefinitionCore(project, symbolId) {
     var url = codexWebRootPrefix + "/definitions/" + encodeURI(project) + "/?symbolId=" + encodeURIComponent(symbolId);
     callServer(url, function (data) {
-        if (startsWith(data, "<!--Definitions-->")) {
-            setLeftPane(data);
-            return;
-        }
+        //if (startsWith(data, "<!--Definitions-->")) {
+        //    setLeftPane(data);
+        //    return;
+        //}
 
         displayFile(data, symbolId, null);
+
+        var contentsUrl = codexWebRootPrefix + "/definitionscontents/" + encodeURI(project) + "/?symbolId=" + encodeURIComponent(symbolId);
+        callServer(contentsUrl, function(contentData) {
+            loadMonacoEditorWithContent(contentData);
+        });
     }, function (error) {
         setRightPane("<div class='note'>" + error + "</div>");
     });
@@ -259,19 +348,30 @@ function LoadSourceCodeCore(project, file, symbolId, lineNumber) {
     }
 
     var url = "/source/" + encodeURI(project) + "/?filename=" + encodeURIComponent(file) + "&partial=true";
-    FillRightPane(url, symbolId, lineNumber);
+    var contentsUrl = "/sourcecontents/" + encodeURI(project) + "/?filename=" + encodeURIComponent(file);
+    FillRightPane(url, symbolId, lineNumber, contentsUrl);
 }
 
-function FillRightPane(url, symbolId, lineNumber) {
+function FillRightPane(url, symbolId, lineNumber, contentsUrl) {
     callServer(url, function (data) {
         displayFile(data, symbolId, lineNumber);
+
+        if (contentsUrl) {
+            callServer(contentsUrl, function(sourceFileData) {
+                loadMonacoEditorWithContent(sourceFileData.contents);
+            });
+        }
     }, function (error) {
         setRightPane("<div class='note'>" + error + "</div>");
     });
 }
 
-function displayFile(text, symbolId, lineNumber) {
-    setRightPane(text);
+function displayFile(data, symbolId, lineNumber) {
+    //if (data.contents) {
+    //    loadMonacoEditor(data.contents);
+    //}
+
+    setRightPane(data);
 
     var filePath = getFilePath();
     if (filePath && filePath !== currentState.filePath) {
