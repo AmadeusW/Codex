@@ -1,0 +1,12 @@
+@model string
+
+@if (Model == null)
+{
+    <div class='note'>
+        No document outline.
+    </div>
+}
+else
+{
+    @Html.Raw(@Model)
+}

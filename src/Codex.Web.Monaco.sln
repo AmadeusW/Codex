@@ -1,0 +1,21 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codex.Web.Monaco", "Codex.Web.Monaco\Codex.Web.Monaco.csproj", "{BC4A8ABD-8848-4544-9F7C-FC98E3A89DF2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Mixed Platforms = Debug|Mixed Platforms
+		Release|Mixed Platforms = Release|Mixed Platforms
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BC4A8ABD-8848-4544-9F7C-FC98E3A89DF2}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{BC4A8ABD-8848-4544-9F7C-FC98E3A89DF2}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{BC4A8ABD-8848-4544-9F7C-FC98E3A89DF2}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{BC4A8ABD-8848-4544-9F7C-FC98E3A89DF2}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

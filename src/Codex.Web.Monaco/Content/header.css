@@ -1,0 +1,175 @@
+#search-box {
+    font-size: 16pt;
+    width: 453px;
+    border-color: lightgray;
+    border-width: 1px;
+    border-style: solid;
+    background-image: url('images/searchmagnifyingglass.png');
+    background-repeat: no-repeat;
+    background-position: 8px 10px;
+    padding-left: 32px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-right: 5px;
+    margin-left: 8px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-right: 0px;
+    vertical-align: top;
+    /*border-style: none;
+    background-color: transparent;
+    width: 100%;*/
+}
+
+.header {
+    background: linear-gradient(to right, #744482 0%,#7db9e8 80%,#b7fff9 100%);
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    height: 58px;
+}
+
+.headerText:link, .headerText:hover, .headerText:active, .headerText:visited, .headerText:focus {
+    color: #216592;
+}
+
+#dotnetLogo {
+    margin-top: 10px;
+    margin-bottom: 6px;
+    margin-left: 10px;
+    margin-right: 0px;
+    padding: 0px;
+    border-width: 0px;
+    vertical-align: top;
+    display: inline-block;
+}
+
+#logoText {
+    background-image: url('images/microsoftlogo.png');
+    background-repeat: no-repeat;
+    background-position: 0px 22px;
+    background-clip: border-box;
+    color: white;
+    font-size: 20px;
+    margin-left: 16px;
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 0px;
+    padding-top: 14px;
+    padding-bottom: 2px;
+    padding-left: 95px;
+    padding-right: 0px;
+    vertical-align: top;
+    display: inline-block;
+}
+
+
+#headerMenu {
+    float: right;
+    top: 0px;
+    right: 10px;
+    padding: 18px;
+}
+
+@media only screen and (max-width: 462px) {
+    #dotnetLogo {
+        display: none;
+    }
+
+    #searchBoxAndImages {
+        padding-right: 58px;
+        box-sizing: border-box;
+        display: block;
+    }
+
+    #search-box {
+        width: 100%;
+    }
+
+    #logoText {
+        display: none;
+    }
+
+    #currentVersion {
+        display: none;
+    }
+
+    #headerMenu {
+        display: none;
+    }
+}
+
+@media only screen and (min-width: 463px) and (max-width: 869px) {
+    #dotnetLogo {
+        display: none;
+    }
+
+    #searchBoxAndImages {
+    }
+
+    #search-box {
+        width: 405px;
+    }
+
+    #logoText {
+        display: none;
+    }
+
+    #currentVersion {
+        display: none;
+    }
+
+    #headerMenu {
+        display: inline-block;
+    }
+}
+
+@media only screen and (min-width: 870px) and (max-width: 1280px) {
+    #dotnetLogo {
+        display: none;
+    }
+
+    #searchBoxAndImages {
+    }
+
+    #search-box {
+        width: 453px;
+    }
+
+    #logoText {
+        display: inline-block;
+    }
+
+    #currentVersion {
+        display: none;
+    }
+
+    #headerMenu {
+        display: inline-block;
+    }
+}
+
+@media only screen and (min-width: 1281px) {
+    #dotnetLogo {
+        display: inline-block;
+    }
+
+    #searchBoxAndImages {
+    }
+
+    #search-box {
+        width: 453px;
+    }
+
+    #logoText {
+        display: inline-block;
+    }
+
+    #currentVersion {
+        display: inline-block;
+    }
+
+    #headerMenu {
+        display: inline-block;
+    }
+}

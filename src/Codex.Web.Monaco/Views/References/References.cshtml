@@ -1,0 +1,12 @@
+@model string
+
+@if (Model == null)
+{
+    <div class='note'>
+        No references found.
+    </div>
+}
+else
+{
+    @Html.Raw(@Model)
+}
