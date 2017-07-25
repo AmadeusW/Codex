@@ -25,5 +25,47 @@ namespace Codex.Utilities
         {
             return new Range(start: span.Start, length: span.Length);
         }
+
+        public static ListSegment<ReferenceSpan> FindOverlappingReferenceSpans(this BoundSourceFile boundSourceFile, Range span)
+        {
+            if (boundSourceFile.References == null)
+            {
+                return new ListSegment<ReferenceSpan>(CollectionUtilities.Empty<ReferenceSpan>.List);
+            }
+
+            return boundSourceFile.References.GetRange(span, CompareSpanMin, CompareSpanMax);
+        }
+
+        public static ListSegment<T> FindOverlappingSpans<T>(this IReadOnlyList<T> spans, Range span)
+            where T : Span
+        {
+            if (spans == null)
+            {
+                return new ListSegment<T>(CollectionUtilities.Empty<T>.List);
+            }
+
+            return spans.GetRange(span, CompareSpanMin, CompareSpanMax);
+        }
+
+        private static int CompareSpanMax(Range intersectSpan, Span span)
+        {
+            if (intersectSpan.End < span.Start)
+            {
+                return -1;
+            }
+
+            return 0;
+        }
+
+        private static int CompareSpanMin(Range intersectSpan, Span span)
+        {
+            if (intersectSpan.Start > (span.Start + span.Length))
+            {
+                return 1;
+            }
+
+            return 0;
+        }
+
     }
 }

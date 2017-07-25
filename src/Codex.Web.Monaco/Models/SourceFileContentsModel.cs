@@ -12,6 +12,13 @@ namespace Codex.Web.Monaco.Models
         public int length { get; set; }
     }
 
+    public class ResultModel
+    {
+        public string url { get; set; }
+        public string symbolId { get; set; }
+        public string projectId { get; set; }
+    }
+
     public class SourceFileContentsModel
     {
         public string contents { get; set; }

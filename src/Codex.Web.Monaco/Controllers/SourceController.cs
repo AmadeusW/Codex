@@ -7,6 +7,8 @@ using System.Web.Mvc;
 using System.Web.Mvc.Html;
 using System.Web.Razor.Parser.SyntaxTree;
 using Codex.ObjectModel;
+using Codex.Storage;
+using Codex.Storage.ElasticProviders;
 using Codex.Utilities;
 using Codex.Web.Monaco.Models;
 using Codex.Web.Monaco.Util;
@@ -18,6 +20,7 @@ namespace WebUI.Controllers
     public class SourceController : Controller
     {
         private readonly IStorage Storage;
+        private readonly ElasticsearchStorage EsStorage;
 
         private readonly static IEqualityComparer<SymbolReferenceEntry> m_referenceEquator = new EqualityComparerBuilder<SymbolReferenceEntry>()
             .CompareByAfter(rs => rs.Span.Reference.Id)
@@ -48,6 +51,7 @@ namespace WebUI.Controllers
         public SourceController(IStorage storage)
         {
             Storage = storage;
+            EsStorage = (ElasticsearchStorage) storage;
         }
 
         [Route("repos/{repoName}/sourcecontent/{projectId}")]
@@ -71,7 +75,7 @@ namespace WebUI.Controllers
             }
         }
 
-        private JsonResult WrapTheModel(SourceFileContentsModel model)
+        private JsonResult WrapTheModel(object model)
         {
             if (model == null)
             {
@@ -148,6 +152,43 @@ namespace WebUI.Controllers
                 }
 
                 return View((object)model);
+            }
+            catch (Exception ex)
+            {
+                return Responses.Exception(ex);
+            }
+        }
+
+        [Route("repos/{repoName}/definitionAtPosition/{projectId}")]
+        [Route("definitionAtPosition/{projectId}")]
+        public async Task<ActionResult> GoToDefinitionAtPositionAsync(string projectId, string filename, int position)
+        {
+            try
+            {
+                Requests.LogRequest(this);
+                var boundSourceFile = await Storage.GetBoundSourceFileAsync(this.GetSearchRepos(), projectId, filename);
+                if (boundSourceFile == null)
+                {
+                    return null;
+                }
+
+                var matchingSpans = boundSourceFile.FindOverlappingReferenceSpans(new Range(start: position, length: 0));
+                var matchingSpan = matchingSpans.FirstOrDefault(span => span.Reference != null && !span.Reference.IsImplicitlyDeclared);
+
+                if (matchingSpan == null)
+                {
+                    return null;
+                }
+
+                Responses.PrepareResponse(Response);
+
+                return
+                    WrapTheModel(new ResultModel()
+                    {
+                        url = $"/definitionscontents/{matchingSpan.Reference.ProjectId}?symbolId={matchingSpan.Reference.Id.Value}",
+                        symbolId = matchingSpan.Reference.Id.Value,
+                        projectId = matchingSpan.Reference.ProjectId
+                    });
             }
             catch (Exception ex)
             {

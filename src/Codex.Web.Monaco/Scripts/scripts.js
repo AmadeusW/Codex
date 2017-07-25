@@ -1,7 +1,34 @@
 var defaultWindowTitle = "Index";
 var editor;
 
-function ensureEditorIsCreated(valueFactory) {
+function registerProviders(project, file) {
+    monaco.languages.register({ id: 'csharp' });
+    monaco.languages.registerDefinitionProvider('csharp', {
+        provideDefinition: function (model, position) {
+            var offset = model.getOffsetAt(position);
+           var url = codexWebRootPrefix + "/definitionAtPosition/" + encodeURI(project) + "/?filename=" + encodeURIComponent(file) + "&position=" + encodeURIComponent(offset);
+           return callServer(url, function(data) {
+               var uri = monaco.Uri.parse(codexWebRootPrefix + data.url + "42");
+               
+               return { uri: uri, range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 } };
+           });
+       } 
+    });
+}
+
+function openEditor(input) {
+    alert(input.resource);
+    var uri = input.resource;
+    return callServer(uri, function(data) {
+        editor.setValue(data.contents);
+    });
+}
+
+function createModelFrom(content) {
+    return monaco.editor.createModel(content, 'csharp', monaco.Uri.parse('file://bar/b'));
+}
+
+function createEditorAndDisplayFileContent(project, file, valueFactory) {
     editor = undefined;
     if (!editor) {
         require.config({ paths: { 'vs': 'node_modules/monaco-editor/dev/vs' } });
@@ -9,26 +36,32 @@ function ensureEditorIsCreated(valueFactory) {
         if (editorPane) {
             require(['vs/editor/editor.main'],
                 function () {
-
+                    registerProviders(project, file);
                     var value = valueFactory();
-                    editor = monaco.editor.create(editorPane,
-                    {
-                        value: value.contents,
+                    var model = createModelFrom(value.contents);
+                    editor = monaco.editor.create(editorPane, {
+                        //value: value.contents,
+                        model: model,
                         language: 'csharp',
-                                        readOnly: true,
-                                        lineNumbers: true,
-                                        scrollBeyondLastLine: true,
-                                        roundedSelection: true
+                        readOnly: true,
+                        lineNumbers: true,
+                        scrollBeyondLastLine: true,
+                        roundedSelection: true,
+                        editorService: { openEditor: openEditor }
                     });
                     
                     editor.focus();
                     var position = { lineNumber: value.position.lineNumber, column: value.position.column };
                     editor.revealPositionInCenter(position);
                     editor.setPosition(position);
-                    editor.deltaDecorations([], [{ range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1), options: { className: 'highlightLine', isWholeLine: true } }])
+                    editor.deltaDecorations([],
+                    [
+                        {
+                            range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
+                            options: { className: 'highlightLine', isWholeLine: true }
+                        }
+                    ]);
                     editor.setSelection({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column + value.position.length });
-                    
-
                 });
         }
     } else {
@@ -56,8 +89,8 @@ function loadMonacoEditor() {
     }
 }
 
-function loadMonacoEditorWithContent(content) {
-    ensureEditorIsCreated(function() { return content; });
+function loadMonacoEditorWithContent(project, fileName, content) {
+    createEditorAndDisplayFileContent(project, fileName, function () { return content; });
 
     //if (editor) {
 
@@ -284,7 +317,10 @@ function LoadDefinitionCore(project, symbolId) {
 
         var contentsUrl = codexWebRootPrefix + "/definitionscontents/" + encodeURI(project) + "/?symbolId=" + encodeURIComponent(symbolId);
         callServer(contentsUrl, function(contentData) {
-            loadMonacoEditorWithContent(contentData);
+            var filePath = getFilePath();
+            if (filePath) {
+                loadMonacoEditorWithContent(project, filePath, contentData);
+            }
         });
     }, function (error) {
         setRightPane("<div class='note'>" + error + "</div>");
@@ -358,7 +394,11 @@ function FillRightPane(url, symbolId, lineNumber, contentsUrl) {
 
         if (contentsUrl) {
             callServer(contentsUrl, function(sourceFileData) {
-                loadMonacoEditorWithContent(sourceFileData.contents);
+                var filePath = getFilePath();
+                if (filePath) {
+                    loadMonacoEditorWithContent(sourceFileData.contents);
+                }
+
             });
         }
     }, function (error) {
