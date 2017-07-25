@@ -42,26 +42,29 @@ function ensureSearchBox() {
     searchBox.focus();
 
     searchBox.onkeyup = function () {
+        if (event && event.keyCode == 13) { // enter
+            lastSearchString = "";
+            onSearchChange();
+        }
+    }
+    // onkeydown supports repeating when user holds the button
+    searchBox.onkeydown = function () {
         if (event) {
             switch (event.keyCode) {
-                case 13: // enter
-                    lastSearchString = "";
-                    onSearchChange();
-                    break;
                 case 38: // up
                     if (event.ctrlKey) {
                         collapseResult();
                     } else {
                         selectPreviousResult();
                     }
-                    break;
+                    return false; // cancel the event so the caret doesn't move
                 case 40: // down
                     if (event.ctrlKey) {
                         expandResult();
                     } else {
                         selectNextResult();
                     }
-                    break;
+                    return false; // cancel the event so the caret doesn't move
                 default:
                     break;
             }
