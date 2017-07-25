@@ -61,6 +61,14 @@
     background-color: #d4edff;
 }
 
+.resultGroupHeader.selectedResult {
+    background-color: #d4edff; /* same as .resultGroupHeader:hover*/
+    border-color: #744482;
+    border-width: 1px 3px 1px 1px;
+    border-style: solid;
+    padding: 5px 3px 5px 27px; /* acommodate .resultGroupHeader's padding for extra border */
+}
+
 .resultGroupAssemblyName {
     font-size: larger;
     font-weight: bold;
@@ -82,10 +90,16 @@
     cursor: pointer;
 }
 
-    .resultItem:hover {
-        background-color: #f6f6f6;
-    }
+.resultItem:hover {
+    background-color: #f6f6f6;
+}
 
+.resultItem.selectedResult {
+    background-color: #f6f6f6; /* same as .resultItem:hover*/
+    border-color: #744482;
+    border-right-width: 3px;
+    border-right-style: solid;
+}
 
 .resultKind {
     display: inline;
