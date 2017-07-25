@@ -39,9 +39,15 @@ function ensureSearchBox() {
     searchBox.focus();
 
     searchBox.onkeyup = function () {
-        if (event && event.keyCode == 13) {
-            lastSearchString = "";
-            onSearchChange();
+        if (event) {
+            switch (event.keyCode) {
+                case 13:
+                    lastSearchString = "";
+                    onSearchChange();
+                    break;
+                default:
+                    break;
+            }
         }
     };
 
