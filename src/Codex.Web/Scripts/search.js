@@ -99,14 +99,13 @@ function resetSelectedResult() {
     }
 }
 
-// This function depends on HTML defined in 
 function expandResult() {
     if (selectedUIElement == null) {
         return;
     }
-    if (selectedUIElement.is('.resultItem')) {
+    if (selectedUIElement.is('.resultItem')) { // Selected item is a single result
         selectedUIElement.parent().trigger("click");
-    } else if (selectedUIElement.is('.resultGroupHeader')) {
+    } else if (selectedUIElement.is('.resultGroupHeader')) { // Selected item is a group
         if (selectedUIElement.next("div").css("display") == "none") {
             selectedUIElement.trigger("click");
         }
@@ -117,14 +116,15 @@ function collapseResult() {
     if (selectedUIElement == null) {
         return;
     }
-    if (selectedUIElement.is('.resultItem')) {
+    if (selectedUIElement.is('.resultItem')) { // Selected item is a single result
+        // Select the parent group and collapse it
         selectedUIElement.removeClass("selectedResult");
         selectedResult = null;
         selectedResultGroup = selectedUIElement.parent().parent().parent().first();
         selectedUIElement = selectedResultGroup.children('.resultGroupHeader')
         selectedUIElement.trigger("click");
         selectedUIElement.addClass("selectedResult");
-    } else if (selectedUIElement.is('.resultGroupHeader')) {
+    } else if (selectedUIElement.is('.resultGroupHeader')) { // Selected item is a group
         if (selectedUIElement.next("div").css("display") != "none") {
             selectedUIElement.trigger("click");
         }
@@ -132,57 +132,49 @@ function collapseResult() {
 }
 
 function selectNextResult() {
-    if (selectedUIElement != null) {
+    if (selectedUIElement != null) { // Deselect currently selected element
         selectedUIElement.removeClass("selectedResult");
     }
 
-    if (selectedResultGroup == null) {
-        console.log("1st group");
-        // Select first group
+    if (selectedResultGroup == null) { // Nothing is selected. Select the first group.
         selectedResultGroup = $(".resultGroup").first();
         selectedUIElement = selectedResultGroup.children(".resultGroupHeader").first();
     }
     else {
         if (selectedResultGroup.children().not(".resultGroupHeader").first().css("display") != "none") {
-            // go ahead with the next result
-            if (selectedResult == null) {
-                console.log("1st result");
+            if (selectedResult == null) { // Select the first result
                 var resultContainer = selectedResultGroup.children().not(".resultGroupHeader").first();
                 var resultLink = resultContainer.children("a").first();
                 selectedResult = resultLink.children(".resultItem").first();
                 selectedUIElement = selectedResult;
             }
-            else {
+            else { // Select the next result
                 var resultLink = selectedResult.parent().next();
                 if (resultLink.is('a')) {
-                    console.log("Next result");
                     selectedResult = resultLink.children(".resultItem").first();
                     selectedUIElement = selectedResult;
                 }
                 else { // There are no more siblings. Go to the next group
-                    console.log("Next group");
-                    selectedResult = null; // so that we try to go back to a result
+                    selectedResult = null;
                     selectedResultGroup = selectedResultGroup.next(".resultGroup");
                     if (selectedResultGroup.is("div")) {
                         selectedUIElement = selectedResultGroup.children(".resultGroupHeader").first();
                     }
                     else {
-                        console.log("You've reached the end.");
+                        // We've reached the end of the list
                         return;
                     }
                 }
             }
         }
-        else {
-            // select the next group instead
-            console.log("Next group");
+        else { // Select the next group
             selectedResult = null; // so that we try to go back to a result
             selectedResultGroup = selectedResultGroup.next(".resultGroup");
             if (selectedResultGroup.is("div")) {
                 selectedUIElement = selectedResultGroup.children(".resultGroupHeader").first();
             }
             else {
-                console.log("You've reached the end.");
+                // We've reached the end of the list
                 return;
             }
         }
@@ -196,7 +188,7 @@ function selectPreviousResult() {
     }
 
     if (selectedResult == null) {
-        console.log("last result");
+        // Last result
         selectedResultGroup = selectedResultGroup.prev(".resultGroup");
         if (selectedResultGroup.children().not(".resultGroupHeader").first().css("display") != "none") {
             if (selectedResultGroup.is("div")) {
@@ -206,13 +198,12 @@ function selectPreviousResult() {
                 selectedUIElement = selectedResult;
             }
             else {
-                console.log("You've reached the beginning.");
+                // We've reached the beginning of the list
                 return;
             }
         }
         else {
             // The group we would have went to is collapsed. go to its header
-            console.log("group is collapsed");
             selectedResult = null;
             selectedUIElement = selectedResultGroup.children(".resultGroupHeader").first();
         }
@@ -220,19 +211,17 @@ function selectPreviousResult() {
     else {
         var resultLink = selectedResult.parent().prev();
         if (resultLink.is('a')) {
-            console.log("previous result");
+            // Previous result
             selectedResult = resultLink.children(".resultItem").first();
             selectedUIElement = selectedResult;
         }
         else { // There are no more siblings. Go to the previous group
-            console.log("This group's header");
-            //selectedResultGroup = selectedResult selectedResultGroup.prev(".resultGroup");
             selectedResult = null; // so that we try to go back to a result
             if (selectedResultGroup.is("div")) {
                 selectedUIElement = selectedResultGroup.children(".resultGroupHeader").first();
             }
             else {
-                console.log("You've reached the beginning.");
+                // We've reached the beginning
                 return;
             }
         }
