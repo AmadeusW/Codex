@@ -99,10 +99,9 @@ namespace WebUI.Controllers
 
             Responses.PrepareResponse(Response);
 
-            return new SourceFileContentsModel()
-            {
-                contents = await boundSourceFile.SourceFile.GetContentsAsync(),
-            };
+            var sourceFile = new SourceFileContentsModel();
+            await sourceFile.Populate(boundSourceFile);
+            return sourceFile;
         }
 
         [Route("repos/{repoName}/source/{projectId}")]
