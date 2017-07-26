@@ -158,43 +158,6 @@ namespace WebUI.Controllers
             }
         }
 
-        [Route("repos/{repoName}/definitionAtPosition/{projectId}")]
-        [Route("definitionAtPosition/{projectId}")]
-        public async Task<ActionResult> GoToDefinitionAtPositionAsync(string projectId, string filename, int position)
-        {
-            try
-            {
-                Requests.LogRequest(this);
-                var boundSourceFile = await Storage.GetBoundSourceFileAsync(this.GetSearchRepos(), projectId, filename);
-                if (boundSourceFile == null)
-                {
-                    return null;
-                }
-
-                var matchingSpans = boundSourceFile.FindOverlappingReferenceSpans(new Range(start: position, length: 0));
-                var matchingSpan = matchingSpans.FirstOrDefault(span => span.Reference != null && !span.Reference.IsImplicitlyDeclared);
-
-                if (matchingSpan == null)
-                {
-                    return null;
-                }
-
-                Responses.PrepareResponse(Response);
-
-                return
-                    WrapTheModel(new ResultModel()
-                    {
-                        url = $"/definitionscontents/{matchingSpan.Reference.ProjectId}?symbolId={matchingSpan.Reference.Id.Value}",
-                        symbolId = matchingSpan.Reference.Id.Value,
-                        projectId = matchingSpan.Reference.ProjectId
-                    });
-            }
-            catch (Exception ex)
-            {
-                return Responses.Exception(ex);
-            }
-        }
-
         [Route("repos/{repoName}/definitions/{projectId}")]
         [Route("definitions/{projectId}")]
         public async Task<ActionResult> GoToDefinitionAsync(string projectId, string symbolId)
@@ -257,7 +220,7 @@ namespace WebUI.Controllers
             }
         }
 
-        [Route("definitionscontents/{projectId}")]
+        [Route("definitionlocation/{projectId}")]
         public async Task<ActionResult> GoToDefinitionGetContentAsync(string projectId, string symbolId)
         {
             try
@@ -278,20 +241,19 @@ namespace WebUI.Controllers
                 if (definitions.Entries.Count == 1)
                 {
                     var definitionReference = definitions.Entries[0];
-                    var sourceFile = await GetSourceFileAsync(definitionReference.ReferringProjectId, definitionReference.File);
-                    if (sourceFile != null)
+                    var referringSpan = definitionReference.ReferringSpan;
+                    var model = new SourceFileLocationModel()
                     {
-                        var referringSpan = definitions.Entries[0].ReferringSpan;
-                        var position = new Span()
+                        projectId = definitionReference.ReferringProjectId,
+                        filename = definitionReference.File,
+                        span = new Span()
                         {
-                            lineNumber = referringSpan.LineNumber + 1,
-                            column = referringSpan.LineSpanEnd + 1,
+                            position = referringSpan.Start,
                             length = referringSpan.Length,
-                        };
-                        sourceFile.position = position;
-                    }
+                        }
+                    };
 
-                    return WrapTheModel(sourceFile);
+                    return WrapTheModel(model);
                 }
                 else
                 {

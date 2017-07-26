@@ -1,36 +1,50 @@
 /// <reference path="../node_modules/@types/jquery/index.d.ts"/>
 /// <reference path="../node_modules/monaco-editor/monaco.d.ts"/>
+
 var defaultWindowTitle = "Index";
 var editor;
 var codexWebRootPrefix = "";
 var currentTextModel;
 var sourceFileModel;
 var registered;
-var currentState;
-var searchBox;
+var currentState: any;
+
+var searchBox: any;
 var lastSearchString;
+
 var selectedFile;
+
+//var document: Document;
+declare const require: any;
+
+declare function LoadSearchCore(searchText);
+
 function registerProviders() {
     if (registered) {
         return;
     }
+
     registered = true;
+
     monaco.languages.register({ id: 'csharp' });
+
     monaco.languages.registerDefinitionProvider('csharp', {
         provideDefinition: function (model, position) {
             var word = model.getWordAtPosition(position);
-            return { uri: monaco.Uri.parse("bar/b"), range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 } };
+            return { uri: monaco.Uri.parse("bar/b"), range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 } }
+
             //if (word && word.word === "B") {
             //    
             //}
             //return null;
         }
     });
+
     monaco.languages.registerReferenceProvider('csharp', {
         provideReferences: function (model, position) {
             var word = model.getWordAtPosition(position);
             if (word && word.word === "B") {
-                return [{ uri: monaco.Uri.parse("bar/c"), range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 } }];
+                return [{ uri: monaco.Uri.parse("bar/c"), range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 } }]
             }
             return [];
         }
@@ -44,10 +58,12 @@ function registerProviders() {
     //           var key = project + "/" + file;
     //           //var uri = monaco.Uri.parse(codexWebRootPrefix + data.url + "42");
     //           var uri = monaco.Uri.parse(key);
+               
     //           return { uri: uri, range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 } };
     //       });
     //   } 
     //});
+
     //monaco.languages.registerReferenceProvider('csharp', {
     //    provideDefinition: function (model, position) {
     //        var offset = model.getOffsetAt(position);
@@ -56,11 +72,13 @@ function registerProviders() {
     //            var key = project + "/" + file;
     //            //var uri = monaco.Uri.parse(codexWebRootPrefix + data.url + "42");
     //            var uri = monaco.Uri.parse(key);
+
     //            return { uri: uri, range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 } };
     //        });
     //    }
     //});
 }
+
 //function openEditor(input) {
 //    alert(input.resource);
 //    var uri = input.resource;
@@ -68,6 +86,7 @@ function registerProviders() {
 //        editor.setValue(data.contents);
 //    });
 //}
+
 function openEditor(input /* { resource: string; selection?: monaco.Range} */) {
     alert(input.resource);
     var model = models[input.resource];
@@ -76,65 +95,79 @@ function openEditor(input /* { resource: string; selection?: monaco.Range} */) {
     }
     return monaco.Promise.as(null);
 }
+
 var models;
 //var models = {
+
 //};
+
 function createModelFrom(content, project, file) {
     if (currentTextModel) {
         currentTextModel.dispose();
     }
+
     var key = project + "/" + file;
     return monaco.editor.createModel(content, 'csharp', monaco.Uri.parse(key));
 }
+
 function createEditorAndDisplayFileContent(project, file, sourceFile) {
     editor = undefined;
     sourceFileModel = sourceFile;
     if (!editor) {
         require.config({ paths: { 'vs': 'node_modules/monaco-editor/dev/vs' } });
+
         var editorPane = document.getElementById('editorPane');
         if (editorPane) {
-            require(['vs/editor/editor.main'], function () {
-                registerProviders();
-                currentTextModel = createModelFrom(sourceFileModel.contents, project, file);
-                editor = monaco.editor.create(editorPane, {
-                    //model: models["bar/a"],
-                    model: currentTextModel
-                }, {
-                    editorService: { openEditor: openEditor },
-                });
-                //var value = valueFactory();
-                //var model = createModelFrom(value.contents, project, file);
-                ////editor = monaco.editor.create(editorPane,
-                ////    {
-                ////        //value: value.contents,
-                ////        model: model,
-                ////        language: 'csharp',
-                ////        readOnly: true,
-                ////        lineNumbers: true,
-                ////        scrollBeyondLastLine: true,
-                ////        roundedSelection: true
-                ////    },
-                ////    { editorService: { openEditor: openEditor } }
-                ////);
-                //editor = monaco.editor.create(editorPane,
-                //    { model: model },
-                //    {
-                //        editorService: { openEditor: openEditor },
-                //        //textModelService: { createModelReference: createModelReference}
-                //    }
-                //);
-                //editor.focus();
-                //var position = { lineNumber: value.position.lineNumber, column: value.position.column };
-                //editor.revealPositionInCenter(position);
-                //editor.setPosition(position);
-                //editor.deltaDecorations([],
-                //[
-                //    {
-                //        range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
-                //        options: { className: 'highlightLine', isWholeLine: true }
-                //    }
-                //]);
-                //editor.setSelection({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column + value.position.length });
+            require(['vs/editor/editor.main'],
+                function () {
+                    registerProviders();
+
+                    currentTextModel = createModelFrom(sourceFileModel.contents, project, file);
+
+                    editor = monaco.editor.create(editorPane,
+                        {
+                            //model: models["bar/a"],
+                            model: currentTextModel
+                        },
+                        {
+                            editorService: { openEditor: openEditor },
+                            //textModelService: { createModelReference: createModelReference }
+                        }
+                    );
+                    //var value = valueFactory();
+                    //var model = createModelFrom(value.contents, project, file);
+                    ////editor = monaco.editor.create(editorPane,
+                    ////    {
+                    ////        //value: value.contents,
+                    ////        model: model,
+                    ////        language: 'csharp',
+                    ////        readOnly: true,
+                    ////        lineNumbers: true,
+                    ////        scrollBeyondLastLine: true,
+                    ////        roundedSelection: true
+                    ////    },
+                    ////    { editorService: { openEditor: openEditor } }
+                    ////);
+                    //editor = monaco.editor.create(editorPane,
+                    //    { model: model },
+                    //    {
+                    //        editorService: { openEditor: openEditor },
+                    //        //textModelService: { createModelReference: createModelReference}
+                    //    }
+                    //);
+                    
+                    //editor.focus();
+                    //var position = { lineNumber: value.position.lineNumber, column: value.position.column };
+                    //editor.revealPositionInCenter(position);
+                    //editor.setPosition(position);
+                    //editor.deltaDecorations([],
+                    //[
+                    //    {
+                    //        range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
+                    //        options: { className: 'highlightLine', isWholeLine: true }
+                    //    }
+                    //]);
+                    //editor.setSelection({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column + value.position.length });
             });
         }
     }
@@ -145,9 +178,12 @@ function createEditorAndDisplayFileContent(project, file, sourceFile) {
     //    //editor.setValue(valueFactory());
     //}
 }
+
 function loadMonacoEditorWithSourceFile(project, fileName, sourceFile) {
     createEditorAndDisplayFileContent(project, fileName, sourceFile);
+
     //if (editor) {
+
     //    editor.setValue(content);
     //    editor.render();
     //}
@@ -168,62 +204,67 @@ function loadMonacoEditorWithSourceFile(project, fileName, sourceFile) {
     //        });
     //}
 }
+
+
 function ReplaceCurrentState() {
     history.replaceState(currentState, currentState.windowTitle, getUrlForState(currentState));
     setPageTitle(currentState.windowTitle);
 }
+
 function OnWindowPopState(event) {
     if (event && event.state) {
         DisplayState(event.state);
     }
 }
+
 function UpdateState(stateUpdate) {
     var newState = jQuery.extend({}, currentState, stateUpdate);
     NavigateToState(newState);
 }
+
 function NavigateToState(state) {
     history.pushState(state, state.windowTitle, getUrlForState(state));
     DisplayState(state);
 }
+
 function resetLeftPane() {
     setLeftPane("<div class='note'>Enter a search string. Start with ` for full text search results only.</div>");
 }
+
 function DisplayState(state) {
     if (!state) {
         return;
     }
+
     if (!state.rightProjectId) {
         state.rightProjectId = state.leftProjectId;
     }
+
     if (!state.leftProjectId) {
         state.leftProjectId = state.rightProjectId;
     }
+
     if (state.leftPaneContent == "search") {
         if (!currentState || currentState.leftPaneContent != "search" || currentState.searchText != state.searchText) {
             LoadSearchCore(state.searchText);
         }
-    }
-    else if (state.leftPaneContent == "project") {
+    } else if (state.leftPaneContent == "project") {
         if (!currentState || currentState.leftPaneContent != "project" || currentState.leftProjectId != state.leftProjectId) {
             LoadProjectExplorerCore(state.leftProjectId);
         }
-    }
-    else if (state.leftPaneContent == "outline") {
+    } else if (state.leftPaneContent == "outline") {
         if (!currentState || currentState.leftPaneContent != "outline" || currentState.rightProjectId != state.rightProjectId || currentState.filePath != state.filePath) {
             if (state.filePath) {
                 LoadDocumentOutlineCore(state.rightProjectId, state.filePath);
-            }
-            else {
+            } else {
                 state.leftPaneContent = null;
             }
         }
-    }
-    else if (state.leftPaneContent == "namespaces") {
+    } else if (state.leftPaneContent == "namespaces") {
         if (!currentState || currentState.leftPaneContent != "namespaces" || currentState.leftProjectId != state.leftProjectId) {
             LoadNamespacesCore(state.leftProjectId);
         }
-    }
-    else if (state.leftPaneContent == "references") {
+    } else if (state.leftPaneContent == "references") {
         if (!currentState || currentState.leftPaneContent != "references"
             || currentState.leftProjectId != state.leftProjectId
             || currentState.leftSymbolId != state.leftSymbolId
@@ -236,32 +277,28 @@ function DisplayState(state) {
         searchBox.value = "";
         lastSearchString = "";
     }
+
     if (state.rightPaneContent == "file") {
         if (!currentState || currentState.rightPaneContent != "file" || currentState.rightProjectId != state.rightProjectId || currentState.filePath != state.filePath) {
             LoadSourceCodeCore(state.rightProjectId, state.filePath, state.rightSymbolId, state.lineNumber);
         }
-    }
-    else if (state.rightPaneContent == "symbol") {
+    } else if (state.rightPaneContent == "symbol") {
         if (!currentState || currentState.rightPaneContent != "symbol" || currentState.rightProjectId != state.rightProjectId || currentState.filePath != state.filePath || currentState.rightSymbolId != state.rightSymbolId) {
             if (state.rightSymbolId) {
                 LoadDefinitionCore(state.rightProjectId, state.rightSymbolId);
-            }
-            else {
+            } else {
                 LoadSourceCodeCore(state.rightProjectId, state.filePath, state.rightSymbolId, state.lineNumber);
             }
         }
-    }
-    else if (state.rightPaneContent == "line") {
+    } else if (state.rightPaneContent == "line") {
         if (!currentState || currentState.rightPaneContent != "line" || currentState.rightProjectId != state.rightProjectId || currentState.filePath != state.filePath || currentState.lineNumber != state.lineNumber) {
             LoadSourceCodeCore(state.rightProjectId, state.filePath, null, state.lineNumber);
         }
-    }
-    else if (state.rightPaneContent == "overview") {
+    } else if (state.rightPaneContent == "overview") {
         if (!currentState || currentState.rightPaneContent != "overview") {
             LoadOverviewCore();
         }
-    }
-    else if (state.rightPaneContent == "about") {
+    } else if (state.rightPaneContent == "about") {
         if (!currentState || currentState.rightPaneContent != "about") {
             LoadAboutCore();
         }
@@ -269,35 +306,45 @@ function DisplayState(state) {
     else {
         setRightPane();
     }
+
     setPageTitle(state.windowTitle);
+
     currentState = state;
 }
+
 function setLeftPane(text) {
     if (!text) {
         text = "<div></div>";
     }
+
     var leftPane = document.getElementById("leftPane");
     leftPane.innerHTML = text;
 }
-function setRightPane(text) {
+
+function setRightPane(text?: string) {
     if (!text) {
         text = "<div></div>";
     }
+
     var rightPane = document.getElementById("rightPane");
     rightPane.innerHTML = text;
 }
+
 function setPageTitle(title) {
     if (!title) {
         title = defaultWindowTitle;
     }
+
     document.title = title;
 }
+
 function GoToLine(lineNumber) {
     UpdateState({
         lineNumber: lineNumber,
         rightPaneContent: "line",
     });
 }
+
 function LoadOverview() {
     UpdateState({
         rightProjectId: null,
@@ -308,6 +355,7 @@ function LoadOverview() {
         rightPaneContent: "overview",
     });
 }
+
 function LoadAbout() {
     UpdateState({
         rightProjectId: null,
@@ -318,6 +366,7 @@ function LoadAbout() {
         rightPaneContent: "about",
     });
 }
+
 function LoadOverviewCore() {
     var url = "/overview/";
     callServer(url, function (data) {
@@ -326,6 +375,7 @@ function LoadOverviewCore() {
         setRightPane("<div class='note'>" + error + "</div>");
     });
 }
+
 function LoadAboutCore() {
     var url = "/about/";
     callServer(url, function (data) {
@@ -334,6 +384,7 @@ function LoadAboutCore() {
         setRightPane("<div class='note'>" + error + "</div>");
     });
 }
+
 function LoadDefinition(project, symbolId) {
     UpdateState({
         rightProjectId: project,
@@ -342,6 +393,7 @@ function LoadDefinition(project, symbolId) {
         rightPaneContent: "symbol",
     });
 }
+
 function LoadDefinitionCore(project, symbolId) {
     var url = codexWebRootPrefix + "/definitionlocation/" + encodeURI(project) + "/?symbolId=" + encodeURIComponent(symbolId);
     callServer(url, function (data) {
@@ -350,6 +402,7 @@ function LoadDefinitionCore(project, symbolId) {
         //    setLeftPane(data);
         //    return;
         //}
+
         //displayFile(data, symbolId, null);
         //
         //var contentsUrl = codexWebRootPrefix + "/definitionscontents/" + encodeURI(project) + "/?symbolId=" + encodeURIComponent(symbolId);
@@ -363,6 +416,7 @@ function LoadDefinitionCore(project, symbolId) {
         setRightPane("<div class='note'>" + error + "</div>");
     });
 }
+
 function LoadReferences(project, symbolId, projectScope) {
     UpdateState({
         leftProjectId: project,
@@ -373,31 +427,36 @@ function LoadReferences(project, symbolId, projectScope) {
         rightPaneContent: "symbol",
     });
 }
+
 function LoadReferencesCore(project, symbolId, projectScope) {
     var url = codexWebRootPrefix + "/references/" + encodeURI(project) + "/?symbolId=" + encodeURIComponent(symbolId);
-    if (projectScope) {
+    if (projectScope)
+    {
         url = appendParam(url, "projectScope", projectScope);
     }
+
     callServer(url, function (data) {
         setLeftPane(data);
     }, function (error) {
         setLeftPane("<div class='note'>" + error + "</div>");
     });
 }
+
 function LoadSourceCode(project, file, symbolId, lineNumber) {
     var whichContent = "symbol";
     if (!symbolId) {
         if (lineNumber) {
             whichContent = "line";
-        }
-        else {
+        } else {
             whichContent = "file";
         }
     }
+
     var title = currentState.windowTitle;
     if (file) {
         title = file;
     }
+
     UpdateState({
         rightProjectId: project,
         filePath: file,
@@ -407,45 +466,57 @@ function LoadSourceCode(project, file, symbolId, lineNumber) {
         rightPaneContent: whichContent,
     });
 }
-function LoadSourceCodeCore(project, file, symbolId, lineNumber) {
+
+function LoadSourceCodeCore(project, file, symbolId, lineNumber?) {
     //if (currentState.rightProjectId == project && currentState.filePath == file) {
     //    GoToSymbolOrLineNumber(symbolId, lineNumber);
     //    return;
     //}
+
     var url = "/source/" + encodeURI(project) + "/?filename=" + encodeURIComponent(file) + "&partial=true";
     var contentsUrl = "/sourcecontent/" + encodeURI(project) + "/?filename=" + encodeURIComponent(file);
     FillRightPane(url, symbolId, lineNumber, contentsUrl, project, file);
 }
+
 function FillRightPane(url, symbolId, lineNumber, contentsUrl, project, file) {
     callServer(url, function (data) {
         displayFile(data, symbolId, lineNumber);
+
         if (contentsUrl) {
-            callServer(contentsUrl, function (sourceFileData) {
+            callServer(contentsUrl, function(sourceFileData) {
                 var filePath = getFilePath();
                 if (filePath) {
                     loadMonacoEditorWithSourceFile(project, file, sourceFileData);
                 }
-            }, function () { });
+
+            },
+                () => {});
         }
     }, function (error) {
         setRightPane("<div class='note'>" + error + "</div>");
     });
 }
+
 function displayFile(data, symbolId, lineNumber) {
     //if (data.contents) {
     //    loadMonacoEditor(data.contents);
     //}
+
     setRightPane(data);
+
     var filePath = getFilePath();
     if (filePath && filePath !== currentState.filePath) {
         currentState.filePath = filePath;
         currentState.windowTitle = filePath;
         ReplaceCurrentState();
     }
+
     GoToSymbolOrLineNumber(symbolId, lineNumber);
+
     addToolbar();
     trackActiveItemInSolutionExplorer();
 }
+
 function GoToSymbolOrLineNumber(symbolId, lineNumber) {
     var blurLine = false;
     if (symbolId) {
@@ -454,29 +525,34 @@ function GoToSymbolOrLineNumber(symbolId, lineNumber) {
             symbolElement.scrollTop();
             symbolElement.focus();
         }
-        else if (!lineNumber) {
+        else if (!lineNumber)
+        {
             lineNumber = 1;
             symbolId = undefined;
             blurLine = true;
         }
     }
+
     if (lineNumber && !symbolId) {
         var lineNumberElement = $("#l" + lineNumber);
         if (lineNumberElement[0]) {
             lineNumberElement.scrollTop();
             lineNumberElement.focus();
-            if (blurLine) {
+            if (blurLine)
+            {
                 lineNumberElement.blur();
             }
         }
     }
 }
+
 function LoadProjectExplorer(project) {
     UpdateState({
         leftProjectId: project,
         leftPaneContent: "project",
     });
 }
+
 function LoadProjectExplorerCore(project) {
     var url = "/projectexplorer/" + encodeURI(project) + "/";
     callServer(url, function (data) {
@@ -486,6 +562,7 @@ function LoadProjectExplorerCore(project) {
         setLeftPane("<div class='note'>" + error + "</div>");
     });
 }
+
 function LoadDocumentOutline(project, filePath) {
     UpdateState({
         rightProjectId: project,
@@ -493,6 +570,7 @@ function LoadDocumentOutline(project, filePath) {
         leftPaneContent: "outline",
     });
 }
+
 function LoadDocumentOutlineCore(project, file) {
     var url = "/documentoutline/" + encodeURI(project) + "/?filePath=" + encodeURIComponent(file);
     callServer(url, function (data) {
@@ -501,12 +579,14 @@ function LoadDocumentOutlineCore(project, file) {
         setLeftPane("<div class='note'>" + error + "</div>");
     });
 }
+
 function LoadNamespaces(project) {
     UpdateState({
         leftProjectId: project,
         leftPaneContent: "namespaces",
     });
 }
+
 function LoadNamespacesCore(project) {
     var url = "/namespaces/" + encodeURI(project) + "/";
     callServer(url, function (data) {
@@ -515,6 +595,7 @@ function LoadNamespacesCore(project) {
         setLeftPane("<div class='note'>" + error + "</div>");
     });
 }
+
 function callServer(url, callback, errorCallback) {
     $.ajax({
         url: url,
@@ -529,133 +610,152 @@ function callServer(url, callback, errorCallback) {
         }
     });
 }
+
 function ToggleExpandCollapse(headerElement) {
     var collapsible = headerElement.nextSibling;
     if (collapsible.style.display == "none") {
         collapsible.style.display = "block";
         headerElement.style.backgroundImage = "url(../../content/icons/minus.png)";
-    }
-    else {
+    } else {
         collapsible.style.display = "none";
         headerElement.style.backgroundImage = "url(../../content/icons/plus.png)";
     }
 }
+
 function ToggleFolderIcon(headerElement) {
     var folderIcon = headerElement.firstChild;
     if (!folderIcon) {
         return;
     }
+
     if (endsWith(folderIcon.src, "202.png")) {
         folderIcon.src = "../../content/icons/201.png";
-    }
-    else if (endsWith(folderIcon.src, "201.png")) {
+    } else if (endsWith(folderIcon.src, "201.png")) {
         folderIcon.src = "../../content/icons/202.png";
     }
 }
+
 function startsWith(text, prefix) {
     if (!text || !prefix) {
         return false;
     }
+
     if (prefix.length > text.length) {
         return false;
     }
+
     var slice = text.slice(0, prefix.length);
     return slice == prefix;
 }
+
 function endsWith(text, suffix) {
     if (!text || !suffix) {
         return false;
     }
+
     if (suffix.length > text.length) {
         return false;
     }
+
     var slice = text.slice(text.length - suffix.length, text.length);
     return slice == suffix;
 }
+
 function getUrlForState(state) {
     var url = "?";
     var hasProjectId = false;
+
     if (state.leftPaneContent == "search" && state.searchText) {
         url = appendParam(url, "query", state.searchText);
-    }
-    else if (state.leftPaneContent == "project" && state.leftProjectId) {
+    } else if (state.leftPaneContent == "project" && state.leftProjectId) {
         url = appendParam(url, "leftProject", state.leftProjectId);
         hasProjectId = true;
-    }
-    else if (state.leftPaneContent == "references" && state.leftProjectId && state.leftSymbolId) {
+    } else if (state.leftPaneContent == "references" && state.leftProjectId && state.leftSymbolId) {
         url = appendParam(url, "leftProject", state.leftProjectId);
         url = appendParam(url, "leftSymbol", state.leftSymbolId);
-        if (state.projectScope) {
+        if (state.projectScope)
+        {
             url = appendParam(url, "projectScope", state.projectScope);
         }
+
         hasProjectId = true;
-    }
-    else if (state.leftPaneContent == "outline" && state.rightProjectId && state.filePath) {
+    } else if (state.leftPaneContent == "outline" && state.rightProjectId && state.filePath) {
         url = appendParam(url, "left", "outline");
-    }
-    else if (state.leftPaneContent == "namespaces" && state.leftProjectId) {
+    } else if (state.leftPaneContent == "namespaces" && state.leftProjectId) {
         url = appendParam(url, "left", "namespaces");
         url = appendParam(url, "leftProject", state.leftProjectId);
         hasProjectId = true;
     }
+
     if (state.rightPaneContent == "file" && state.rightProjectId && state.filePath) {
         if (state.leftProjectId !== state.rightProjectId || !hasProjectId) {
             url = appendParam(url, "rightProject", state.rightProjectId);
         }
+
         url = appendParam(url, "file", state.filePath);
-    }
-    else if (state.rightPaneContent == "symbol" && state.rightProjectId && state.rightSymbolId) {
+    } else if (state.rightPaneContent == "symbol" && state.rightProjectId && state.rightSymbolId) {
         if (state.leftProjectId !== state.rightProjectId || !hasProjectId) {
             url = appendParam(url, "rightProject", state.rightProjectId);
         }
+
         if (state.filePath) {
             url = appendParam(url, "file", state.filePath);
         }
+
         if (state.leftSymbolId !== state.rightSymbolId) {
             url = appendParam(url, "rightSymbol", state.rightSymbolId);
         }
-    }
-    else if (state.rightPaneContent == "line" && state.rightProjectId && state.filePath && state.lineNumber) {
+    } else if (state.rightPaneContent == "line" && state.rightProjectId && state.filePath && state.lineNumber) {
         if (state.leftProjectId !== state.rightProjectId || !hasProjectId) {
             url = appendParam(url, "rightProject", state.rightProjectId);
         }
+
         url = appendParam(url, "file", state.filePath);
         url = appendParam(url, "line", state.lineNumber);
-    }
-    else if (state.rightPaneContent == "about") {
+    } else if (state.rightPaneContent == "about") {
         url = "about";
     }
+
     if (url.length == 1) {
         return null;
     }
+
     return url;
 }
+
 function appendParam(url, name, value) {
     var result = url;
     if (result.length > 1) {
         result += "&";
     }
+
     result += name + "=" + encodeURIComponent(value);
+
     return result;
 }
+
 function addToolbar() {
     var editorPane = document.getElementById("sourceCode");
     if (!editorPane) {
         return;
     }
+
     var documentOutlineButton = document.createElement('img');
     documentOutlineButton.setAttribute('src', '../../content/icons/DocumentOutline.png');
     documentOutlineButton.title = "Document Outline";
     documentOutlineButton.className = 'documentOutlineButton';
     documentOutlineButton.onclick = showDocumentOutline;
     editorPane.appendChild(documentOutlineButton);
+
     var projectExplorerButton = document.createElement('img');
     var projectExplorerIcon = '../../content/icons/CSharpProjectExplorer.png';
+
     projectExplorerButton.setAttribute('src', projectExplorerIcon);
     projectExplorerButton.title = "Project Explorer";
     projectExplorerButton.className = 'projectExplorerButton';
     projectExplorerButton.onclick = function () { document.getElementById('projectExplorerLink').click(); };
     editorPane.appendChild(projectExplorerButton);
+
     var namespaceExplorerButton = document.createElement('img');
     namespaceExplorerButton.setAttribute('src', '../../content/icons/NamespaceExplorer.png');
     namespaceExplorerButton.title = "Namespace Explorer";
@@ -663,26 +763,31 @@ function addToolbar() {
     namespaceExplorerButton.onclick = showNamespaceExplorer;
     //editorPane.appendChild(namespaceExplorerButton);
 }
+
 function showDocumentOutline() {
     LoadDocumentOutline(currentState.rightProjectId, currentState.filePath);
 }
+
 function showNamespaceExplorer() {
     var projectId = currentState.rightProjectId;
     if (!projectId) {
         projectId = currentState.leftProjectId;
     }
+
     if (projectId) {
         LoadNamespaces(projectId);
     }
 }
+
 function trackActiveItemInSolutionExplorer() {
     var projectExplorer = document.getElementById("projectExplorer");
     if (!projectExplorer) {
         return;
     }
+
     var rootFolderDiv = projectExplorer.firstChild;
-    if (rootFolderDiv && (rootFolderDiv.className == "projectCS" || rootFolderDiv.className == "projectVB")) {
-        rootFolderDiv = rootFolderDiv.nextElementSibling;
+    if (rootFolderDiv && ((<any>rootFolderDiv).className == "projectCS" || (<any>rootFolderDiv).className == "projectVB")) {
+        rootFolderDiv = (<any>rootFolderDiv).nextElementSibling;
         if (rootFolderDiv) {
             var filePath = getFilePath();
             if (filePath) {
@@ -691,6 +796,7 @@ function trackActiveItemInSolutionExplorer() {
         }
     }
 }
+
 function selectItem(div, parts) {
     var text = parts[0];
     var found = null;
@@ -701,9 +807,11 @@ function selectItem(div, parts) {
             break;
         }
     }
+
     if (!found) {
         return;
     }
+
     if (parts.length == 1 && found.tagName == "A") {
         selectFile(found);
     }
@@ -713,49 +821,58 @@ function selectItem(div, parts) {
         selectItem(found, parts.slice(1));
     }
 }
+
 function getInnerText(element) {
     if (typeof element.innerText !== "undefined") {
         return element.innerText;
-    }
-    else {
+    } else {
         return element.textContent;
     }
 }
+
 function expandFolderIfNeeded(folder) {
     if (folder.style.display != "block" && folder && folder.previousSibling && folder.previousSibling.onclick) {
         folder.previousSibling.onclick();
     }
 }
+
 function getFilePath() {
     var editorPane = document.getElementById("editorPane");
     if (!editorPane) {
         return;
     }
+
     var filePath = editorPane.getAttribute("data-filepath");
     return filePath;
 }
+
 function selectFile(a) {
     var selected = selectedFile;
     if (selected === a) {
         return;
     }
+
     if (selected && selected.classList) {
         selected.classList.remove("selectedFilename");
     }
+
     selectedFile = a;
     if (a) {
         if (a.classList) {
             a.classList.add("selectedFilename");
         }
+
         scrollIntoViewIfNeeded(a);
     }
 }
+
 function scrollIntoViewIfNeeded(element) {
     var topOfPage = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop;
     var heightOfPage = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
     var elY = 0;
     var elH = 0;
-    if (document.layers) {
+
+    if ((<any>document).layers) {
         elY = element.y;
         elH = element.height;
     }
@@ -763,8 +880,10 @@ function scrollIntoViewIfNeeded(element) {
         for (var p = element; p && p.tagName != 'BODY'; p = p.offsetParent) {
             elY += p.offsetTop;
         }
+
         elH = element.offsetHeight;
     }
+
     if ((topOfPage + heightOfPage) < (elY + elH)) {
         element.scrollIntoView(false);
     }
@@ -772,36 +891,45 @@ function scrollIntoViewIfNeeded(element) {
         element.scrollIntoView(true);
     }
 }
+
 // called when clicking on a tree item in Document Outline
 function S(symbolId) {
     if (currentState.rightProjectId && currentState.filePath) {
         LoadSourceCode(currentState.rightProjectId, currentState.filePath, symbolId, null);
     }
 }
+
 // called when clicking on a reference to a symbol in source code
 function D(projectId, symbolId) {
     LoadDefinition(projectId, symbolId);
 }
+
 // called when clicking on a definition of a symbol in source code
 function R(projectId, symbolId, projectScope) {
     LoadReferences(projectId, symbolId, projectScope);
 }
+
 var currentSelection = null;
+
 // highlight references
 function t(sender) {
     var classname = sender.className;
+
     var elements;
     if (currentSelection) {
         elements = document.getElementsByClassName(currentSelection);
         for (var i = 0; i < elements.length; i++) {
             elements[i].style.background = "transparent";
         }
+
         if (classname == currentSelection) {
             currentSelection = null;
             return;
         }
     }
+
     currentSelection = classname;
+
     elements = document.getElementsByClassName(currentSelection);
     for (var i = 0; i < elements.length; i++) {
         elements[i].style.background = "cyan";

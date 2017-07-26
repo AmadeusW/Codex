@@ -20,13 +20,21 @@ namespace Codex.Web.Monaco.Models
         public string projectId { get; set; }
     }
 
+    public class SourceFileLocationModel
+    {
+        public string projectId { get; set; }
+        public string filename { get; set; }
+        public Span span { get; set; }
+    }
+
     public class SourceFileContentsModel
     {
         public string contents { get; set; }
 
         public Span position { get; set; }
 
-        public LineModel[] lines { get; set; }
+        public List<SymbolSpan> definitions { get; set; } = new List<SymbolSpan>(0);
+        public List<SymbolSpan> references { get; set; } = new List<SymbolSpan>(0);
 
         public string view { get; set; }
 
@@ -34,20 +42,11 @@ namespace Codex.Web.Monaco.Models
         {
             contents = await boundSourceFile.SourceFile.GetContentsAsync();
 
-            lines = new LineModel[boundSourceFile.Lines];
-
             foreach (var reference in boundSourceFile.References)
             {
                 if (reference.Reference.IsImplicitlyDeclared)
                 {
                     continue;
-                }
-
-                var lineModel = lines[reference.LineNumber];
-                if (lineModel == null)
-                {
-                    lineModel = new LineModel();
-                    lines[reference.LineNumber] = lineModel;
                 }
 
                 var symbolSpan = new SymbolSpan()
@@ -63,11 +62,11 @@ namespace Codex.Web.Monaco.Models
 
                 if (reference.Reference.ReferenceKind == nameof(ReferenceKind.Definition))
                 {
-                    lineModel.definitions.Add(symbolSpan);
+                    definitions.Add(symbolSpan);
                 }
                 else
                 {
-                    lineModel.references.Add(symbolSpan);
+                    references.Add(symbolSpan);
                 }
             }
         }
@@ -78,11 +77,5 @@ namespace Codex.Web.Monaco.Models
         public string symbol { get; set; }
         public string projectId { get; set; }
         public Span span { get; set; }
-    }
-
-    public class LineModel
-    {
-        public List<SymbolSpan> definitions { get; set; } = new List<SymbolSpan>(0);
-        public List<SymbolSpan> references { get; set; } = new List<SymbolSpan>(0);
     }
 }
