@@ -7,12 +7,6 @@ var codexWebRootPrefix = "";
 var currentTextModel;
 var sourceFileModel;
 var registered;
-var currentState: any;
-
-var searchBox: any;
-var lastSearchString;
-
-var selectedFile;
 
 // Required by monaco. Have no idea how to use it without it.
 declare const require: any;

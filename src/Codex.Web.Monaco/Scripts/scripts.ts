@@ -2,13 +2,14 @@
 /// <reference path="../node_modules/monaco-editor/monaco.d.ts"/>
 /// <reference path="rpc.ts"/>
 /// <reference path="editor.ts"/>
+/// <reference path="state.ts"/>
 
 var defaultWindowTitle = "Index";
 var editor;
 var codexWebRootPrefix = "";
 var currentTextModel;
 var sourceFileModel;
-var currentState: any;
+var currentState: CodexWebState;
 
 var searchBox: any;
 var lastSearchString;

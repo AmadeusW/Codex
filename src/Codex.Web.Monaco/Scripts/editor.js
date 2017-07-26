@@ -6,10 +6,6 @@ var codexWebRootPrefix = "";
 var currentTextModel;
 var sourceFileModel;
 var registered;
-var currentState;
-var searchBox;
-var lastSearchString;
-var selectedFile;
 function registerProviders() {
     if (registered) {
         return;

@@ -2,6 +2,7 @@
 /// <reference path="../node_modules/monaco-editor/monaco.d.ts"/>
 /// <reference path="rpc.ts"/>
 /// <reference path="editor.ts"/>
+/// <reference path="state.ts"/>
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }

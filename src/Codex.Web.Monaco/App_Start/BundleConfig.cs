@@ -20,6 +20,7 @@ namespace WebUI
                 "~/Scripts/split.js",
                 "~/Scripts/scripts.js",
                 "~/Scripts/rpc.js",
+                "~/Scripts/state.js",
                 "~/Scripts/editor.js"
                 ));
 
