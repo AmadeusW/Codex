@@ -18,7 +18,10 @@ namespace WebUI
                 "~/node_modules/monaco-editor/dev/vs/loader.js",
                 "~/Scripts/search.js",
                 "~/Scripts/split.js",
-                "~/Scripts/scripts.js"));
+                "~/Scripts/scripts.js",
+                "~/Scripts/rpc.js",
+                "~/Scripts/editor.js"
+                ));
 
             // Use the development version of Modernizr to develop with and learn from. Then, when you're
             // ready for production, use the build tool at http://modernizr.com to pick only the tests you need.
