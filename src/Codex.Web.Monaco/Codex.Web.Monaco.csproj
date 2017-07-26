@@ -446,6 +446,7 @@
     <Content Include="Scripts\respond.js" />
     <Content Include="Scripts\respond.min.js" />
     <TypeScriptCompile Include="node_modules\%40types\jquery\index.d.ts" />
+    <TypeScriptCompile Include="Scripts\rpc.ts" />
     <TypeScriptCompile Include="Scripts\scripts.ts" />
     <Content Include="Scripts\search.js" />
     <Content Include="Scripts\split.js" />

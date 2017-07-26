@@ -1,5 +1,6 @@
 /// <reference path="../node_modules/@types/jquery/index.d.ts"/>
 /// <reference path="../node_modules/monaco-editor/monaco.d.ts"/>
+/// <reference path="rpc.ts"/>
 
 var defaultWindowTitle = "Index";
 var editor;
@@ -418,26 +419,6 @@ function LoadSourceCode(project, file, symbolId, lineNumber) {
         rightPaneContent: whichContent,
     });
 }
-
-interface Span {
-    position: number;
-    length: number;
-}
-
-interface SymbolSpan {
-    symbol: string;
-    projectId: string;
-    span: Span;
-}
-
-interface SourceFileContentsModel {
-    contents: string;
-    span: Span;
-    definitions: SymbolSpan[];
-    references: SymbolSpan[];
-    vew: string;
-}
-
 function LoadSourceCodeCore(project: string, file: string, symbolId: string, lineNumber?) {
     //if (currentState.rightProjectId == project && currentState.filePath == file) {
     //    GoToSymbolOrLineNumber(symbolId, lineNumber);
