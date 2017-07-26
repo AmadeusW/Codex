@@ -289,29 +289,26 @@ function LoadSourceCodeCore(project: string, file: string, symbolId: string, lin
     FillRightPane(url, symbolId, lineNumber, contentsUrl, project, file);
 }
 
-function FillRightPane(url: string, symbolId: string, lineNumber, contentsUrl, project: string, file: string) {
-    callServer(url, data => {
+async function FillRightPane(url: string, symbolId: string, lineNumber, contentsUrl, project: string, file: string) {
+    try {
+        let data = await server(url);
         displayFile(data, symbolId, lineNumber);
 
-        if (contentsUrl) {
-            callServer(contentsUrl, (sourceFileData: SourceFileContentsModel) => {
-                    var filePath = getFilePath();
-                    if (filePath) {
-                        let definitionUrl = `/definitionlocation/${encodeURI(project)}/?symbolId=${encodeURIComponent(symbolId)}`;
-                        callServer(definitionUrl, (sfd: SourceFileContentsModel) => {
-                            // TODO: this is extremely strange to get this stuff!!!
-                            sourceFileData.span = sfd.span;
-                            createMonacoEditorAndDisplayFileContent(project, file, sourceFileData);
-                        },
-                        () => {});
+        let sourceFileData = await server<SourceFileContentsModel>(contentsUrl);
 
-                    }
-                },
-                () => {});
+        var filePath = getFilePath();
+        if (filePath) {
+            let definitionUrl = `/definitionlocation/${encodeURI(project)}/?symbolId=${encodeURIComponent(symbolId)}`;
+            let data = await server<SourceFileContentsModel>(definitionUrl);
+
+            // TODO: this is extremely strange to get this stuff!!!
+            sourceFileData.span = data.span;
+            createMonacoEditorAndDisplayFileContent(project, file, sourceFileData);
         }
-    }, error => {
-        setRightPane("<div class='note'>" + error + "</div>");
-    });
+    }
+    catch (e) {
+        setRightPane("<div class='note'>" + e + "</div>");
+    }
 }
 
 function displayFile(data, symbolId, lineNumber) {
@@ -413,24 +410,20 @@ function LoadNamespacesCore(project) {
     });
 }
 
-function server<T>(url: string): monaco.Promise<T> {
-    function onSuccess(data) {
-        return data;
-    }
-
-    $.ajax({
-        url: url,
-        type: "GET",
-        success: onSuccess,
-        error: function (jqXHR, textStatus, errorThrown) {
-            if (textStatus !== "abort") {
-                //errorCallback(jqXHR + "\n" + textStatus + "\n" + errorThrown);
+function server<T>(url: string): Promise<T> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: url,
+            type: "GET",
+            success: data => { resolve(data); return <T>data; },
+            error: function (jqXHR, textStatus, errorThrown) {
+                if (textStatus !== "abort") {
+                    //errorCallback(jqXHR + "\n" + textStatus + "\n" + errorThrown);
+                    reject(new Error(jqXHR + "\n" + textStatus + "\n" + errorThrown));
+                }
             }
-        }
+        });
     });
-
-    return new monaco.Promise(onSuccess, () => { });
-    //let promise = monaco.Promise()
 }
 
 function callServer(url, callback, errorCallback) {

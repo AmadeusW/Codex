@@ -123,4 +123,3 @@ function createMonacoEditorAndDisplayFileContent(project, file, sourceFile) {
         }
     }
 }
-//# sourceMappingURL=editor.js.map
