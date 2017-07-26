@@ -118,6 +118,10 @@ function DisplayState(newState: CodexWebState) {
     state.currentState = newState;
 }
 
+function updateReferences(referencesHtml: string) {
+    setLeftPane(referencesHtml);
+}
+
 function setLeftPane(text) {
     if (!text) {
         text = "<div></div>";
@@ -275,33 +279,38 @@ function LoadSourceCode(project, file, symbolId, lineNumber) {
         rightPaneContent: whichContent,
     });
 }
-function LoadSourceCodeCore(project: string, file: string, symbolId: string, lineNumber?) {
+
+function LoadSourceCodeCore(project: string, file: string, symbolId: string, lineNumber?: number) {
     //if (currentState.rightProjectId == project && currentState.filePath == file) {
     //    GoToSymbolOrLineNumber(symbolId, lineNumber);
     //    return;
     //}
 
     var url = `/source/${encodeURI(project)}/?filename=${encodeURIComponent(file)}&partial=true`;
-    var contentsUrl = `/sourcecontent/${encodeURI(project)}/?fileName=${encodeURIComponent(file)}`;
-    FillRightPane(url, symbolId, lineNumber, contentsUrl, project, file);
+    FillRightPane(url, symbolId, lineNumber, project, file);
 }
 
-async function FillRightPane(url: string, symbolId: string, lineNumber, contentsUrl, project: string, file: string) {
+async function FillRightPane(url: string, symbolId: string, lineNumber: number, project: string, file: string) {
     try {
         let data = await server(url);
         displayFile(data, symbolId, lineNumber);
 
-        let sourceFileData = await server<SourceFileContentsModel>(contentsUrl);
-
-        let filePath = getFilePath();
-        if (filePath) {
-            let definitionUrl = `/definitionlocation/${encodeURI(project)}/?symbolId=${encodeURIComponent(symbolId)}`;
-            let data = await server<SourceFileContentsModel>(definitionUrl);
-
-            // TODO: this is extremely strange to get this stuff!!!
-            sourceFileData.span = data.span;
-            createMonacoEditorAndDisplayFileContent(project, file, sourceFileData);
+        let sourceFileData = await getSourceFileContents(project, file);
+        if (symbolId) {
+            let definitionSpan = getDefinitionForSymbol(sourceFileData, symbolId);
+            if (definitionSpan) {
+                sourceFileData.span = definitionSpan.span;
+            }
         }
+
+        createMonacoEditorAndDisplayFileContent(project, file, sourceFileData, lineNumber);
+        let bottomPaneInnerHtml = document.getElementById("bottomPaneHidden").innerHTML;
+        bottomPaneInnerHtml = replaceAll(replaceAll(replaceAll(replaceAll(bottomPaneInnerHtml,
+            "{filePath}", file),
+            "{projectId}", project),
+            "{repoRelativePath}", sourceFileData.repoRelativePath || ""),
+            "{webLink}", sourceFileData.webLink || "");
+        document.getElementById("bottomPane").innerHTML = bottomPaneInnerHtml;
     }
     catch (e) {
         setRightPane("<div class='note'>" + e + "</div>");
@@ -721,4 +730,25 @@ function t(sender) {
     for (var i = 0; i < elements.length; i++) {
         elements[i].style.background = "cyan";
     }
+}
+
+function replaceAll(originalString: string, oldValue: string, newValue: string, ignoreCase: boolean = false) {
+    //
+    // if invalid data, return the original string
+    //
+    if ((originalString == null) || (oldValue == null) || (newValue == null) || (oldValue.length == 0))
+        return (originalString);
+    //
+    // set search/replace flags
+    //
+    var Flags: string = (ignoreCase) ? "gi" : "g";
+    //
+    // apply regex escape sequence on pattern (oldValue)
+    //
+    var pattern = oldValue.replace(/[-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+    //
+    // replace oldValue with newValue
+    //
+    var str = originalString.replace(new RegExp(pattern, Flags), newValue);
+    return (str);
 }

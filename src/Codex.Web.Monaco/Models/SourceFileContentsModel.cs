@@ -40,6 +40,8 @@ namespace Codex.Web.Monaco.Models
 
         public string projectId { get; set; }
         public string filePath { get; set; }
+        public string repoRelativePath { get; set; }
+        public string webLink { get; set; }
 
         public List<SegmentModel> segments { get; set; } = new List<SegmentModel>();
 
@@ -48,6 +50,9 @@ namespace Codex.Web.Monaco.Models
         public async Task Populate(BoundSourceFile boundSourceFile)
         {
             contents = await boundSourceFile.SourceFile.GetContentsAsync();
+            repoRelativePath = boundSourceFile.SourceFile.Info.RepoRelativePath;
+            webLink = boundSourceFile.SourceFile.Info.WebAddress;
+
             segmentLength = contents.Length;
             var segment = new SegmentModel();
             segments.Add(segment);

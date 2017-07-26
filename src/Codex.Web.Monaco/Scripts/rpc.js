@@ -54,11 +54,31 @@ function getDefinition(_this, position) {
     }
     return undefined;
 }
-function getSourceFileContents(projectId, filePath) {
+function getDefinitionForSymbol(_this, symbolId) {
+    if (!_this.segments) {
+        return undefined;
+    }
+    for (var _i = 0, _a = _this.segments; _i < _a.length; _i++) {
+        var segment = _a[_i];
+        for (var _b = 0, _c = segment.definitions; _b < _c.length; _b++) {
+            var symbolSpan = _c[_b];
+            if (symbolSpan.symbol === symbolId) {
+                return symbolSpan;
+            }
+        }
+    }
     return undefined;
 }
-function getFindAllReferencesHtml(projectId, symbolId) {
-    return null;
+function getSourceFileContents(projectId, filePath) {
+    var url = "/sourcecontent/" + encodeURI(projectId) + "/?filename=" + encodeURI(filePath);
+    return serverWithPrefix(url);
+}
+function getFindAllReferencesHtml(projectId, symbolId, projectScope) {
+    var url = "/references/" + encodeURI(projectId) + "/?symbolId=" + encodeURI(symbolId);
+    if (projectScope) {
+        url += "&projectScope=" + encodeURI(projectScope);
+    }
+    return serverWithPrefix(url);
 }
 function getDefinitionLocation(projectId, symbol) {
     var url = "/definitionscontents/" + encodeURI(projectId) + "/?symbolId=" + encodeURI(symbol);

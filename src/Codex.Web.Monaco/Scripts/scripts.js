@@ -40,7 +40,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var defaultWindowTitle = "Index";
 var editor;
-var currentTextModel;
 var currentState;
 var searchBox;
 var lastSearchString;
@@ -148,6 +147,9 @@ function DisplayState(state) {
     }
     setPageTitle(state.windowTitle);
     currentState = state;
+}
+function updateReferences(referencesHtml) {
+    setLeftPane(referencesHtml);
 }
 function setLeftPane(text) {
     if (!text) {
@@ -285,39 +287,38 @@ function LoadSourceCodeCore(project, file, symbolId, lineNumber) {
     //    return;
     //}
     var url = "/source/" + encodeURI(project) + "/?filename=" + encodeURIComponent(file) + "&partial=true";
-    var contentsUrl = "/sourcecontent/" + encodeURI(project) + "/?fileName=" + encodeURIComponent(file);
-    FillRightPane(url, symbolId, lineNumber, contentsUrl, project, file);
+    FillRightPane(url, symbolId, lineNumber, project, file);
 }
-function FillRightPane(url, symbolId, lineNumber, contentsUrl, project, file) {
+function FillRightPane(url, symbolId, lineNumber, project, file) {
     return __awaiter(this, void 0, void 0, function () {
-        var data, sourceFileData, filePath, definitionUrl, data_1, e_1;
+        var data, sourceFileData, definitionSpan, bottomPaneInnerHtml, e_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 5, , 6]);
+                    _a.trys.push([0, 3, , 4]);
                     return [4 /*yield*/, server(url)];
                 case 1:
                     data = _a.sent();
                     displayFile(data, symbolId, lineNumber);
-                    return [4 /*yield*/, server(contentsUrl)];
+                    return [4 /*yield*/, getSourceFileContents(project, file)];
                 case 2:
                     sourceFileData = _a.sent();
-                    filePath = getFilePath();
-                    if (!filePath) return [3 /*break*/, 4];
-                    definitionUrl = "/definitionlocation/" + encodeURI(project) + "/?symbolId=" + encodeURIComponent(symbolId);
-                    return [4 /*yield*/, server(definitionUrl)];
+                    if (symbolId) {
+                        definitionSpan = getDefinitionForSymbol(sourceFileData, symbolId);
+                        if (definitionSpan) {
+                            sourceFileData.span = definitionSpan.span;
+                        }
+                    }
+                    createMonacoEditorAndDisplayFileContent(project, file, sourceFileData, lineNumber);
+                    bottomPaneInnerHtml = document.getElementById("bottomPaneHidden").innerHTML;
+                    bottomPaneInnerHtml = replaceAll(replaceAll(replaceAll(replaceAll(bottomPaneInnerHtml, "{filePath}", file), "{projectId}", project), "{repoRelativePath}", sourceFileData.repoRelativePath || ""), "{webLink}", sourceFileData.webLink || "");
+                    document.getElementById("bottomPane").innerHTML = bottomPaneInnerHtml;
+                    return [3 /*break*/, 4];
                 case 3:
-                    data_1 = _a.sent();
-                    // TODO: this is extremely strange to get this stuff!!!
-                    sourceFileData.span = data_1.span;
-                    createMonacoEditorAndDisplayFileContent(project, file, sourceFileData);
-                    _a.label = 4;
-                case 4: return [3 /*break*/, 6];
-                case 5:
                     e_1 = _a.sent();
                     setRightPane("<div class='note'>" + e_1 + "</div>");
-                    return [3 /*break*/, 6];
-                case 6: return [2 /*return*/];
+                    return [3 /*break*/, 4];
+                case 4: return [2 /*return*/];
             }
         });
     });
@@ -674,4 +675,25 @@ function t(sender) {
     for (var i = 0; i < elements.length; i++) {
         elements[i].style.background = "cyan";
     }
+}
+function replaceAll(originalString, oldValue, newValue, ignoreCase) {
+    if (ignoreCase === void 0) { ignoreCase = false; }
+    //
+    // if invalid data, return the original string
+    //
+    if ((originalString == null) || (oldValue == null) || (newValue == null) || (oldValue.length == 0))
+        return (originalString);
+    //
+    // set search/replace flags
+    //
+    var Flags = (ignoreCase) ? "gi" : "g";
+    //
+    // apply regex escape sequence on pattern (oldValue)
+    //
+    var pattern = oldValue.replace(/[-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+    //
+    // replace oldValue with newValue
+    //
+    var str = originalString.replace(new RegExp(pattern, Flags), newValue);
+    return (str);
 }
