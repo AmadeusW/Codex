@@ -182,7 +182,11 @@ function selectNextResult() {
             }
         }
     }
-    selectedUIElement.addClass("selectedResult");
+    if (selectedUIElement != null && selectedUIElement.length) {
+        // Select and scroll to the element
+        selectedUIElement.addClass("selectedResult");
+        selectedUIElement[0].scrollIntoViewIfNeeded();
+    }
 }
 
 function selectPreviousResult() {
@@ -225,11 +229,16 @@ function selectPreviousResult() {
             }
             else {
                 // We've reached the beginning
+                $("#leftPane").scrollTop(0); // scroll to the very top
                 return;
             }
         }
     }
-    selectedUIElement.addClass("selectedResult");
+    if (selectedUIElement != null && selectedUIElement.length) {
+        // Select and scroll to the element
+        selectedUIElement.addClass("selectedResult");
+        selectedUIElement[0].scrollIntoViewIfNeeded();
+    }
 }
 
 function LoadSearchCore(searchText) {
