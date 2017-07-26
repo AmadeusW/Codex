@@ -55,10 +55,15 @@ function getDefinition(_this, position) {
     return undefined;
 }
 function getSourceFileContents(projectId, filePath) {
-    return undefined;
+    var url = "/sourcecontent/" + encodeURI(projectId) + "/?filename=" + encodeURI(filePath);
+    return serverWithPrefix(url);
 }
-function getFindAllReferencesHtml(projectId, symbolId) {
-    return null;
+function getFindAllReferencesHtml(projectId, symbolId, projectScope) {
+    var url = "/references/" + encodeURI(projectId) + "/?symbolId=" + encodeURI(symbolId);
+    if (projectScope) {
+        url += "&projectScope=" + encodeURI(projectScope);
+    }
+    return serverWithPrefix(url);
 }
 function getDefinitionLocation(projectId, symbol) {
     var url = "/definitionscontents/" + encodeURI(projectId) + "/?symbolId=" + encodeURI(symbol);

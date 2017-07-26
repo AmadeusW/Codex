@@ -1,6 +1,7 @@
 /// <reference path="../node_modules/@types/jquery/index.d.ts"/>
 /// <reference path="../node_modules/monaco-editor/monaco.d.ts"/>
 /// <reference path="rpc.ts"/>
+/// <reference path="scripts.ts"/>
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -60,10 +61,10 @@ function registerProviders() {
     monaco.languages.registerDefinitionProvider('csharp', {
         provideDefinition: function (model, position) {
             var offset = model.getOffsetAt(position);
-            var definition = getReference(sourceFileModel, offset);
-            var uri = monaco.Uri.parse(encodeURI(definition.projectId) + "/" + encodeURI(definition.symbol));
-            uri.projectId = definition.projectId;
-            uri.symbol = definition.symbol;
+            var reference = getReference(sourceFileModel, offset);
+            var uri = monaco.Uri.parse(encodeURI(reference.projectId) + "/" + encodeURI(reference.symbol));
+            uri.projectId = reference.projectId;
+            uri.symbol = reference.symbol;
             return {
                 uri: uri,
                 range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 }
@@ -108,6 +109,15 @@ function registerProviders() {
     //        });
     //    }
     //});
+}
+function getReferencesHtmlAtPosition(editor) {
+    var position = editor.getPosition();
+    var offset = currentTextModel.getOffsetAt(position);
+    var definition = getDefinition(sourceFileModel, offset) || getReference(sourceFileModel, offset);
+    if (!definition) {
+        return Promise.resolve(undefined);
+    }
+    return getFindAllReferencesHtml(definition.projectId, definition.symbol);
 }
 //function openEditor(input) {
 //    alert(input.resource);
@@ -162,7 +172,7 @@ function createModelFrom(content, project, file) {
     currentTextModel = monaco.editor.createModel(content, 'csharp', monaco.Uri.parse(key));
     return currentTextModel;
 }
-function createMonacoEditorAndDisplayFileContent(project, file, sourceFile) {
+function createMonacoEditorAndDisplayFileContent(project, file, sourceFile, lineNumber) {
     editor = undefined;
     sourceFileModel = sourceFile;
     if (!editor) {
@@ -188,10 +198,49 @@ function createMonacoEditorAndDisplayFileContent(project, file, sourceFile) {
                 }, {
                     editorService: { openEditor: openEditor },
                 });
+                editor.addAction({
+                    // An unique identifier of the contributed action.
+                    id: 'Codex.FindAllReferences.LeftPane',
+                    // A label of the action that will be presented to the user.
+                    label: 'Find All References (Advanced)',
+                    // An optional array of keybindings for the action.
+                    keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.F10],
+                    // A precondition for this action.
+                    precondition: null,
+                    // A rule to evaluate on top of the precondition in order to dispatch the keybindings.
+                    keybindingContext: null,
+                    contextMenuGroupId: 'navigation',
+                    contextMenuOrder: 1.5,
+                    // Method that will be executed when the action is triggered.
+                    // @param editor The editor instance is passed in as a convinience
+                    run: function (ed) {
+                        return __awaiter(this, void 0, void 0, function () {
+                            var referencesHtml;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0: return [4 /*yield*/, getReferencesHtmlAtPosition(ed)];
+                                    case 1:
+                                        referencesHtml = _a.sent();
+                                        if (referencesHtml) {
+                                            updateReferences(referencesHtml);
+                                        }
+                                        return [2 /*return*/];
+                                }
+                            });
+                        });
+                    }
+                });
                 editor.focus();
+                var position;
+                var length = 0;
                 if (sourceFile.span) {
-                    var monacoPosition = currentTextModel.getPositionAt(sourceFile.span.position);
-                    var position = { lineNumber: monacoPosition.lineNumber, column: monacoPosition.column };
+                    position = currentTextModel.getPositionAt(sourceFile.span.position);
+                    length = sourceFile.span.length;
+                }
+                else if (lineNumber) {
+                    position = { lineNumber: lineNumber, column: 1 };
+                }
+                if (position) {
                     editor.revealPositionInCenter(position);
                     editor.setPosition(position);
                     editor.deltaDecorations([], [
@@ -200,7 +249,12 @@ function createMonacoEditorAndDisplayFileContent(project, file, sourceFile) {
                             options: { className: 'highlightLine', isWholeLine: true }
                         }
                     ]);
-                    editor.setSelection({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column + sourceFile.span.length });
+                    editor.setSelection({
+                        startLineNumber: position.lineNumber,
+                        startColumn: position.column,
+                        endLineNumber: position.lineNumber,
+                        endColumn: position.column + length
+                    });
                 }
             });
         }

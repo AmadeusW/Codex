@@ -94,12 +94,18 @@ function getDefinition(_this: SourceFileContentsModel, position: number): Symbol
 
 type DefinitionLocation = string | SourceFileContentsModel;
 
-function getSourceFileContents(projectId: string, filePath: string): SourceFileContentsModel {
-    return undefined;
+function getSourceFileContents(projectId: string, filePath: string): Promise<SourceFileContentsModel> {
+    let url = `/sourcecontent/${encodeURI(projectId)}/?filename=${encodeURI(filePath)}`;
+    return serverWithPrefix<SourceFileContentsModel>(url);
 }
 
-function getFindAllReferencesHtml(projectId: string, symbolId: string): string {
-    return null;
+function getFindAllReferencesHtml(projectId: string, symbolId: string, projectScope?: string): Promise<string> {
+    let url = `/references/${encodeURI(projectId)}/?symbolId=${encodeURI(symbolId)}`;
+    if (projectScope) {
+        url += `&projectScope=${encodeURI(projectScope)}`;
+    }
+
+    return serverWithPrefix<string>(url);
 }
 
 function getDefinitionLocation(projectId: string, symbol: string): Promise<DefinitionLocation> {

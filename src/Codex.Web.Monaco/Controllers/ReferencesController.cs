@@ -256,7 +256,7 @@ namespace WebUI.Controllers
                             {
                                 var first = sameLineReferencesGroup.First();
                                 var lineNumber = first.ReferringSpan.LineNumber + 1;
-                                string onClick = $@"LoadSourceCode('{first.ReferringProjectId}', '{first.ReferringFilePath.AsJavaScriptStringEncoded()}', null, '{lineNumber}');return false;";
+                                string onClick = $@"LoadSourceCode('{first.ReferringProjectId}', '{first.ReferringFilePath.AsJavaScriptStringEncoded()}', null, {lineNumber});return false;";
                                 var url = $"/?leftProject={definitionProjectId}&leftSymbol={symbolId}&rightProject={first.ReferringProjectId}&file={HttpUtility.UrlEncode(first.ReferringFilePath)}&line={lineNumber}";
                                 Write(writer, "<a class=\"rL\" onclick=\"{0}\" href=\"{1}\">", onClick, url);
 
