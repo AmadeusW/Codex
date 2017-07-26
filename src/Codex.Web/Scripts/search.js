@@ -194,7 +194,7 @@ function selectPreviousResult() {
         selectedUIElement.removeClass("selectedResult");
     }
 
-    if (selectedResult == null && selectedResult.length) {
+    if (selectedResult == null || !selectedResult.length) {
         // Last result
         selectedResultGroup = selectedResultGroup.prev(".resultGroup");
         if (selectedResultGroup.children().not(".resultGroupHeader").first().css("display") != "none") {
