@@ -179,22 +179,28 @@ function LoadAbout() {
     });
 }
 
+function handleError(e: any) {
+    setRightPane("<div class='note'>" + e + "</div>");
+}
+
+function loadRightPaneFrom(url: string) {
+    server<string>(url).then(
+        data => setRightPane(data),
+        e => setRightPane("<div class='note'>" + e + "</div>"));
+}
+
+function loadLeftPaneFrom(url: string) {
+    server<string>(url).then(
+        data => setLeftPane(data),
+        e => setLeftPane("<div class='note'>" + e + "</div>"));
+}
+
 function LoadOverviewCore() {
-    var url = "/overview/";
-    callServer(url, function (data) {
-        setRightPane(data);
-    }, function (error) {
-        setRightPane("<div class='note'>" + error + "</div>");
-    });
+    loadRightPaneFrom("/overview/");
 }
 
 function LoadAboutCore() {
-    var url = "/about/";
-    callServer(url, function (data) {
-        setRightPane(data);
-    }, function (error) {
-        setRightPane("<div class='note'>" + error + "</div>");
-    });
+    loadRightPaneFrom("/about/");
 }
 
 function LoadDefinition(project, symbolId) {
@@ -208,7 +214,7 @@ function LoadDefinition(project, symbolId) {
 
 function LoadDefinitionCore(project, symbolId) {
     var url = codexWebRootPrefix + "/definitionlocation/" + encodeURI(project) + "/?symbolId=" + encodeURIComponent(symbolId);
-    callServer(url, function (data) {
+    server(url).then(function (data: any) {
         LoadSourceCodeCore(data.projectId, data.filename, symbolId);
         //if (startsWith(data, "<!--Definitions-->")) {
         //    setLeftPane(data);
@@ -247,11 +253,7 @@ function LoadReferencesCore(project, symbolId, projectScope) {
         url = appendParam(url, "projectScope", projectScope);
     }
 
-    callServer(url, function (data) {
-        setLeftPane(data);
-    }, function (error) {
-        setLeftPane("<div class='note'>" + error + "</div>");
-    });
+    loadLeftPaneFrom(url);
 }
 
 function LoadSourceCode(project, file, symbolId, lineNumber) {
@@ -296,7 +298,7 @@ async function FillRightPane(url: string, symbolId: string, lineNumber, contents
 
         let sourceFileData = await server<SourceFileContentsModel>(contentsUrl);
 
-        var filePath = getFilePath();
+        let filePath = getFilePath();
         if (filePath) {
             let definitionUrl = `/definitionlocation/${encodeURI(project)}/?symbolId=${encodeURIComponent(symbolId)}`;
             let data = await server<SourceFileContentsModel>(definitionUrl);
@@ -369,7 +371,7 @@ function LoadProjectExplorer(project) {
 
 function LoadProjectExplorerCore(project) {
     var url = "/projectexplorer/" + encodeURI(project) + "/";
-    callServer(url, function (data) {
+    server(url).then(function (data) {
         setLeftPane(data);
         trackActiveItemInSolutionExplorer();
     }, function (error) {
@@ -387,11 +389,7 @@ function LoadDocumentOutline(project, filePath) {
 
 function LoadDocumentOutlineCore(project, file) {
     var url = "/documentoutline/" + encodeURI(project) + "/?filePath=" + encodeURIComponent(file);
-    callServer(url, function (data) {
-        setLeftPane(data);
-    }, function (error) {
-        setLeftPane("<div class='note'>" + error + "</div>");
-    });
+    loadLeftPaneFrom(url);
 }
 
 function LoadNamespaces(project) {
@@ -403,11 +401,7 @@ function LoadNamespaces(project) {
 
 function LoadNamespacesCore(project) {
     var url = "/namespaces/" + encodeURI(project) + "/";
-    callServer(url, function (data) {
-        setLeftPane(data);
-    }, function (error) {
-        setLeftPane("<div class='note'>" + error + "</div>");
-    });
+    loadLeftPaneFrom(url);
 }
 
 function server<T>(url: string): Promise<T> {
@@ -423,21 +417,6 @@ function server<T>(url: string): Promise<T> {
                 }
             }
         });
-    });
-}
-
-function callServer(url, callback, errorCallback) {
-    $.ajax({
-        url: url,
-        type: "GET",
-        success: function (data) {
-            callback(data);
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            if (textStatus !== "abort") {
-                errorCallback(jqXHR + "\n" + textStatus + "\n" + errorThrown);
-            }
-        }
     });
 }
 
@@ -666,14 +645,13 @@ function expandFolderIfNeeded(folder) {
     }
 }
 
-function getFilePath() {
-    var editorPane = document.getElementById("editorPane");
-    if (!editorPane) {
-        return;
-    }
+function getEditorPane(): HTMLElement {
+    return document.getElementById("editorPane");
+}
 
-    var filePath = editorPane.getAttribute("data-filepath");
-    return filePath;
+function getFilePath(): string {    
+    let editorPane = getEditorPane();
+    return editorPane && editorPane.getAttribute("data-filepath");
 }
 
 function selectFile(a) {
