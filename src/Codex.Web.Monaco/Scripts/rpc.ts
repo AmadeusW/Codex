@@ -1,5 +1,4 @@
 /// <reference path="../node_modules/@types/jquery/index.d.ts"/>
-var codexWebRootPrefix: string = "";
 
 function serverWithPrefix<T>(url: string): Promise<T> {
     return server(codexWebRootPrefix + url);
@@ -106,7 +105,6 @@ function getDefinitionLocation(projectId: string, symbol: string): Promise<Defin
     let url = `/definitionscontents/${encodeURI(projectId)}/?symbolId=${encodeURI(symbol)}`;
     return serverWithPrefix<DefinitionLocation>(url);
 }
-
 
 
 

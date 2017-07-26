@@ -4,11 +4,6 @@
 /// <reference path="editor.ts"/>
 /// <reference path="state.ts"/>
 
-var defaultWindowTitle = "Index";
-var editor;
-var currentTextModel;
-var currentState: CodexWebState;
-
 var searchBox: any;
 var lastSearchString;
 
@@ -18,8 +13,8 @@ var selectedFile;
 declare function LoadSearchCore(searchText);
 
 function ReplaceCurrentState() {
-    history.replaceState(currentState, currentState.windowTitle, getUrlForState(currentState));
-    setPageTitle(currentState.windowTitle);
+    history.replaceState(state.currentState, state.currentState.windowTitle, getUrlForState(state.currentState));
+    setPageTitle(state.currentState.windowTitle);
 }
 
 function OnWindowPopState(event) {
@@ -29,7 +24,7 @@ function OnWindowPopState(event) {
 }
 
 function UpdateState(stateUpdate) {
-    var newState = jQuery.extend({}, currentState, stateUpdate);
+    var newState = jQuery.extend({}, state.currentState, stateUpdate);
     NavigateToState(newState);
 }
 
@@ -42,45 +37,45 @@ function resetLeftPane() {
     setLeftPane("<div class='note'>Enter a search string. Start with ` for full text search results only.</div>");
 }
 
-function DisplayState(state) {
-    if (!state) {
+function DisplayState(newState: CodexWebState) {
+    if (!newState) {
         return;
     }
 
-    if (!state.rightProjectId) {
-        state.rightProjectId = state.leftProjectId;
+    if (!newState.rightProjectId) {
+        newState.rightProjectId = newState.leftProjectId;
     }
 
-    if (!state.leftProjectId) {
-        state.leftProjectId = state.rightProjectId;
+    if (!newState.leftProjectId) {
+        newState.leftProjectId = newState.rightProjectId;
     }
 
-    if (state.leftPaneContent == "search") {
-        if (!currentState || currentState.leftPaneContent != "search" || currentState.searchText != state.searchText) {
-            LoadSearchCore(state.searchText);
+    if (newState.leftPaneContent == "search") {
+        if (!state.currentState || state.currentState.leftPaneContent != "search" || state.currentState.searchText != newState.searchText) {
+            LoadSearchCore(newState.searchText);
         }
-    } else if (state.leftPaneContent == "project") {
-        if (!currentState || currentState.leftPaneContent != "project" || currentState.leftProjectId != state.leftProjectId) {
-            LoadProjectExplorerCore(state.leftProjectId);
+    } else if (newState.leftPaneContent == "project") {
+        if (!state.currentState || state.currentState.leftPaneContent != "project" || state.currentState.leftProjectId != newState.leftProjectId) {
+            LoadProjectExplorerCore(newState.leftProjectId);
         }
-    } else if (state.leftPaneContent == "outline") {
-        if (!currentState || currentState.leftPaneContent != "outline" || currentState.rightProjectId != state.rightProjectId || currentState.filePath != state.filePath) {
-            if (state.filePath) {
-                LoadDocumentOutlineCore(state.rightProjectId, state.filePath);
+    } else if (newState.leftPaneContent == "outline") {
+        if (!state.currentState || state.currentState.leftPaneContent != "outline" || state.currentState.rightProjectId != newState.rightProjectId || state.currentState.filePath != newState.filePath) {
+            if (newState.filePath) {
+                LoadDocumentOutlineCore(newState.rightProjectId, newState.filePath);
             } else {
-                state.leftPaneContent = null;
+                newState.leftPaneContent = null;
             }
         }
-    } else if (state.leftPaneContent == "namespaces") {
-        if (!currentState || currentState.leftPaneContent != "namespaces" || currentState.leftProjectId != state.leftProjectId) {
-            LoadNamespacesCore(state.leftProjectId);
+    } else if (newState.leftPaneContent == "namespaces") {
+        if (!state.currentState || state.currentState.leftPaneContent != "namespaces" || state.currentState.leftProjectId != newState.leftProjectId) {
+            LoadNamespacesCore(newState.leftProjectId);
         }
-    } else if (state.leftPaneContent == "references") {
-        if (!currentState || currentState.leftPaneContent != "references"
-            || currentState.leftProjectId != state.leftProjectId
-            || currentState.leftSymbolId != state.leftSymbolId
-            || currentState.projectScope != state.projectScope) {
-            LoadReferencesCore(state.leftProjectId, state.leftSymbolId, state.projectScope);
+    } else if (newState.leftPaneContent == "references") {
+        if (!state.currentState || state.currentState.leftPaneContent != "references"
+            || state.currentState.leftProjectId != newState.leftProjectId
+            || state.currentState.leftSymbolId != newState.leftSymbolId
+            || state.currentState.projectScope != newState.projectScope) {
+            LoadReferencesCore(newState.leftProjectId, newState.leftSymbolId, newState.projectScope);
         }
     }
     else {
@@ -89,28 +84,28 @@ function DisplayState(state) {
         lastSearchString = "";
     }
 
-    if (state.rightPaneContent == "file") {
-        if (!currentState || currentState.rightPaneContent != "file" || currentState.rightProjectId != state.rightProjectId || currentState.filePath != state.filePath) {
-            LoadSourceCodeCore(state.rightProjectId, state.filePath, state.rightSymbolId, state.lineNumber);
+    if (newState.rightPaneContent == "file") {
+        if (!state.currentState || state.currentState.rightPaneContent != "file" || state.currentState.rightProjectId != newState.rightProjectId || state.currentState.filePath != newState.filePath) {
+            LoadSourceCodeCore(newState.rightProjectId, newState.filePath, newState.rightSymbolId, newState.lineNumber);
         }
-    } else if (state.rightPaneContent == "symbol") {
-        if (!currentState || currentState.rightPaneContent != "symbol" || currentState.rightProjectId != state.rightProjectId || currentState.filePath != state.filePath || currentState.rightSymbolId != state.rightSymbolId) {
-            if (state.rightSymbolId) {
-                LoadDefinitionCore(state.rightProjectId, state.rightSymbolId);
+    } else if (newState.rightPaneContent == "symbol") {
+        if (!state.currentState || state.currentState.rightPaneContent != "symbol" || state.currentState.rightProjectId != newState.rightProjectId || state.currentState.filePath != newState.filePath || state.currentState.rightSymbolId != newState.rightSymbolId) {
+            if (newState.rightSymbolId) {
+                LoadDefinitionCore(newState.rightProjectId, newState.rightSymbolId);
             } else {
-                LoadSourceCodeCore(state.rightProjectId, state.filePath, state.rightSymbolId, state.lineNumber);
+                LoadSourceCodeCore(newState.rightProjectId, newState.filePath, newState.rightSymbolId, newState.lineNumber);
             }
         }
-    } else if (state.rightPaneContent == "line") {
-        if (!currentState || currentState.rightPaneContent != "line" || currentState.rightProjectId != state.rightProjectId || currentState.filePath != state.filePath || currentState.lineNumber != state.lineNumber) {
-            LoadSourceCodeCore(state.rightProjectId, state.filePath, null, state.lineNumber);
+    } else if (newState.rightPaneContent == "line") {
+        if (!state.currentState || state.currentState.rightPaneContent != "line" || state.currentState.rightProjectId != newState.rightProjectId || state.currentState.filePath != newState.filePath || state.currentState.lineNumber != newState.lineNumber) {
+            LoadSourceCodeCore(newState.rightProjectId, newState.filePath, null, newState.lineNumber);
         }
-    } else if (state.rightPaneContent == "overview") {
-        if (!currentState || currentState.rightPaneContent != "overview") {
+    } else if (newState.rightPaneContent == "overview") {
+        if (!state.currentState || state.currentState.rightPaneContent != "overview") {
             LoadOverviewCore();
         }
-    } else if (state.rightPaneContent == "about") {
-        if (!currentState || currentState.rightPaneContent != "about") {
+    } else if (newState.rightPaneContent == "about") {
+        if (!state.currentState || state.currentState.rightPaneContent != "about") {
             LoadAboutCore();
         }
     }
@@ -118,9 +113,9 @@ function DisplayState(state) {
         setRightPane();
     }
 
-    setPageTitle(state.windowTitle);
+    setPageTitle(newState.windowTitle);
 
-    currentState = state;
+    state.currentState = newState;
 }
 
 function setLeftPane(text) {
@@ -143,7 +138,7 @@ function setRightPane(text?: string) {
 
 function setPageTitle(title) {
     if (!title) {
-        title = defaultWindowTitle;
+        title = state.defaultWindowTitle;
     }
 
     document.title = title;
@@ -162,7 +157,7 @@ function LoadOverview() {
         filePath: null,
         rightSymbolId: null,
         lineNumber: null,
-        windowTitle: defaultWindowTitle,
+        windowTitle: state.defaultWindowTitle,
         rightPaneContent: "overview",
     });
 }
@@ -173,7 +168,7 @@ function LoadAbout() {
         filePath: null,
         rightSymbolId: null,
         lineNumber: null,
-        windowTitle: defaultWindowTitle,
+        windowTitle: state.defaultWindowTitle,
         rightPaneContent: "about",
     });
 }
@@ -212,7 +207,8 @@ function LoadDefinition(project, symbolId) {
 }
 
 function LoadDefinitionCore(project, symbolId) {
-    var url = codexWebRootPrefix + "/definitionlocation/" + encodeURI(project) + "/?symbolId=" + encodeURIComponent(symbolId);
+    // TODO: the 'definitionlocation' was removed.
+    var url = state.codexWebRootPrefix + "/definitionlocation/" + encodeURI(project) + "/?symbolId=" + encodeURIComponent(symbolId);
     server(url).then(function (data: any) {
         LoadSourceCodeCore(data.projectId, data.filename, symbolId);
         //if (startsWith(data, "<!--Definitions-->")) {
@@ -246,7 +242,7 @@ function LoadReferences(project, symbolId, projectScope) {
 }
 
 function LoadReferencesCore(project, symbolId, projectScope) {
-    var url = codexWebRootPrefix + "/references/" + encodeURI(project) + "/?symbolId=" + encodeURIComponent(symbolId);
+    var url = state.codexWebRootPrefix + "/references/" + encodeURI(project) + "/?symbolId=" + encodeURIComponent(symbolId);
     if (projectScope)
     {
         url = appendParam(url, "projectScope", projectScope);
@@ -265,7 +261,7 @@ function LoadSourceCode(project, file, symbolId, lineNumber) {
         }
     }
 
-    var title = currentState.windowTitle;
+    var title = state.currentState.windowTitle;
     if (file) {
         title = file;
     }
@@ -320,9 +316,9 @@ function displayFile(data, symbolId, lineNumber) {
     setRightPane(data);
 
     var filePath = getFilePath();
-    if (filePath && filePath !== currentState.filePath) {
-        currentState.filePath = filePath;
-        currentState.windowTitle = filePath;
+    if (filePath && filePath !== state.currentState.filePath) {
+        state.currentState.filePath = filePath;
+        state.currentState.windowTitle = filePath;
         ReplaceCurrentState();
     }
 
@@ -557,13 +553,13 @@ function addToolbar() {
 }
 
 function showDocumentOutline() {
-    LoadDocumentOutline(currentState.rightProjectId, currentState.filePath);
+    LoadDocumentOutline(state.currentState.rightProjectId, state.currentState.filePath);
 }
 
 function showNamespaceExplorer() {
-    var projectId = currentState.rightProjectId;
+    var projectId = state.currentState.rightProjectId;
     if (!projectId) {
-        projectId = currentState.leftProjectId;
+        projectId = state.currentState.leftProjectId;
     }
 
     if (projectId) {
@@ -685,8 +681,8 @@ function scrollIntoViewIfNeeded(element) {
 
 // called when clicking on a tree item in Document Outline
 function S(symbolId) {
-    if (currentState.rightProjectId && currentState.filePath) {
-        LoadSourceCode(currentState.rightProjectId, currentState.filePath, symbolId, null);
+    if (state.currentState.rightProjectId && state.currentState.filePath) {
+        LoadSourceCode(state.currentState.rightProjectId, state.currentState.filePath, symbolId, null);
     }
 }
 
