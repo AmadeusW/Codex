@@ -14,9 +14,10 @@ var lastSearchString;
 
 var selectedFile;
 
-//var document: Document;
+// Required by monaco. Have no idea how to use it without it.
 declare const require: any;
 
+// For type safety reasons. The function defined in another js file right now.
 declare function LoadSearchCore(searchText);
 
 function registerProviders() {
@@ -87,7 +88,7 @@ function registerProviders() {
 //    });
 //}
 
-function openEditor(input /* { resource: string; selection?: monaco.Range} */) {
+function openEditor(input: { resource: string; selection?: monaco.Range}) {
     alert(input.resource);
     var model = models[input.resource];
     if (model) {
@@ -101,16 +102,16 @@ var models;
 
 //};
 
-function createModelFrom(content, project, file) {
+function createModelFrom(content: string, project: string, file: string) {
     if (currentTextModel) {
         currentTextModel.dispose();
     }
 
-    var key = project + "/" + file;
+    var key = `${project}/${file}`;
     return monaco.editor.createModel(content, 'csharp', monaco.Uri.parse(key));
 }
 
-function createEditorAndDisplayFileContent(project, file, sourceFile) {
+function createMonacoEditorAndDisplayFileContent(project: string, file: string, sourceFile: SourceFileContentsModel) {
     editor = undefined;
     sourceFileModel = sourceFile;
     if (!editor) {
@@ -124,87 +125,38 @@ function createEditorAndDisplayFileContent(project, file, sourceFile) {
 
                     currentTextModel = createModelFrom(sourceFileModel.contents, project, file);
 
-                    editor = monaco.editor.create(editorPane,
-                        {
-                            //model: models["bar/a"],
-                            model: currentTextModel
-                        },
-                        {
+                    editor = monaco.editor.create(editorPane, {
+                        // Don't need to specify a language, because model carries this information around.
+                        model: currentTextModel,
+                        readOnly: true,
+                        lineNumbers: "on",
+                        scrollBeyondLastLine: true
+                        }, {
                             editorService: { openEditor: openEditor },
                             //textModelService: { createModelReference: createModelReference }
                         }
                     );
-                    //var value = valueFactory();
-                    //var model = createModelFrom(value.contents, project, file);
-                    ////editor = monaco.editor.create(editorPane,
-                    ////    {
-                    ////        //value: value.contents,
-                    ////        model: model,
-                    ////        language: 'csharp',
-                    ////        readOnly: true,
-                    ////        lineNumbers: true,
-                    ////        scrollBeyondLastLine: true,
-                    ////        roundedSelection: true
-                    ////    },
-                    ////    { editorService: { openEditor: openEditor } }
-                    ////);
-                    //editor = monaco.editor.create(editorPane,
-                    //    { model: model },
-                    //    {
-                    //        editorService: { openEditor: openEditor },
-                    //        //textModelService: { createModelReference: createModelReference}
-                    //    }
-                    //);
                     
-                    //editor.focus();
-                    //var position = { lineNumber: value.position.lineNumber, column: value.position.column };
-                    //editor.revealPositionInCenter(position);
-                    //editor.setPosition(position);
-                    //editor.deltaDecorations([],
-                    //[
-                    //    {
-                    //        range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
-                    //        options: { className: 'highlightLine', isWholeLine: true }
-                    //    }
-                    //]);
-                    //editor.setSelection({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column + value.position.length });
+                    editor.focus();
+                    if (sourceFile.span) {
+                        var monacoPosition = currentTextModel.getPositionAt(sourceFile.span.position);
+
+                        var position = { lineNumber: monacoPosition.lineNumber, column: monacoPosition.column };
+                        editor.revealPositionInCenter(position);
+                        editor.setPosition(position);
+                        editor.deltaDecorations([],
+                            [
+                                {
+                                    range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
+                                    options: { className: 'highlightLine', isWholeLine: true }
+                                }
+                            ]);
+                        editor.setSelection({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column + sourceFile.span.length });
+                    }                    
             });
         }
     }
-    //else {
-    //    editor.setValue("asdfasdfa");
-    //    //editor.render();
-    //    //editor.getModel()._lines = ["asdf", "asdf"];
-    //    //editor.setValue(valueFactory());
-    //}
 }
-
-function loadMonacoEditorWithSourceFile(project, fileName, sourceFile) {
-    createEditorAndDisplayFileContent(project, fileName, sourceFile);
-
-    //if (editor) {
-
-    //    editor.setValue(content);
-    //    editor.render();
-    //}
-    //require.config({ paths: { 'vs': 'node_modules/monaco-editor/dev/vs' } });
-    //var editorPane = document.getElementById('editorPane');
-    //if (editorPane) {
-    //    require(['vs/editor/editor.main'],
-    //        function () {
-    //            editor = monaco.editor.create(editorPane,
-    //            {
-    //                value: content,
-    //                language: 'csharp',
-    //                readOnly: true,
-    //                lineNumbers: true,
-    //                scrollBeyondLastLine: true,
-    //                roundedSelection: true
-    //            });
-    //        });
-    //}
-}
-
 
 function ReplaceCurrentState() {
     history.replaceState(currentState, currentState.windowTitle, getUrlForState(currentState));
@@ -467,32 +419,57 @@ function LoadSourceCode(project, file, symbolId, lineNumber) {
     });
 }
 
-function LoadSourceCodeCore(project, file, symbolId, lineNumber?) {
+interface Span {
+    position: number;
+    length: number;
+}
+
+interface SymbolSpan {
+    symbol: string;
+    projectId: string;
+    span: Span;
+}
+
+interface SourceFileContentsModel {
+    contents: string;
+    span: Span;
+    definitions: SymbolSpan[];
+    references: SymbolSpan[];
+    vew: string;
+}
+
+function LoadSourceCodeCore(project: string, file: string, symbolId: string, lineNumber?) {
     //if (currentState.rightProjectId == project && currentState.filePath == file) {
     //    GoToSymbolOrLineNumber(symbolId, lineNumber);
     //    return;
     //}
 
-    var url = "/source/" + encodeURI(project) + "/?filename=" + encodeURIComponent(file) + "&partial=true";
-    var contentsUrl = "/sourcecontent/" + encodeURI(project) + "/?filename=" + encodeURIComponent(file);
+    var url = `/source/${encodeURI(project)}/?filename=${encodeURIComponent(file)}&partial=true`;
+    var contentsUrl = `/sourcecontent/${encodeURI(project)}/?fileName=${encodeURIComponent(file)}`;
     FillRightPane(url, symbolId, lineNumber, contentsUrl, project, file);
 }
 
-function FillRightPane(url, symbolId, lineNumber, contentsUrl, project, file) {
-    callServer(url, function (data) {
+function FillRightPane(url: string, symbolId: string, lineNumber, contentsUrl, project: string, file: string) {
+    callServer(url, data => {
         displayFile(data, symbolId, lineNumber);
 
         if (contentsUrl) {
-            callServer(contentsUrl, function(sourceFileData) {
-                var filePath = getFilePath();
-                if (filePath) {
-                    loadMonacoEditorWithSourceFile(project, file, sourceFileData);
-                }
+            callServer(contentsUrl, (sourceFileData: SourceFileContentsModel) => {
+                    var filePath = getFilePath();
+                    if (filePath) {
+                        let definitionUrl = `/definitionlocation/${encodeURI(project)}/?symbolId=${encodeURIComponent(symbolId)}`;
+                        callServer(definitionUrl, (sfd: SourceFileContentsModel) => {
+                            // TODO: this is extremely strange to get this stuff!!!
+                            sourceFileData.span = sfd.span;
+                            createMonacoEditorAndDisplayFileContent(project, file, sourceFileData);
+                        },
+                        () => {});
 
-            },
+                    }
+                },
                 () => {});
         }
-    }, function (error) {
+    }, error => {
         setRightPane("<div class='note'>" + error + "</div>");
     });
 }
@@ -594,6 +571,26 @@ function LoadNamespacesCore(project) {
     }, function (error) {
         setLeftPane("<div class='note'>" + error + "</div>");
     });
+}
+
+function server<T>(url: string): monaco.Promise<T> {
+    function onSuccess(data) {
+        return data;
+    }
+
+    $.ajax({
+        url: url,
+        type: "GET",
+        success: onSuccess,
+        error: function (jqXHR, textStatus, errorThrown) {
+            if (textStatus !== "abort") {
+                //errorCallback(jqXHR + "\n" + textStatus + "\n" + errorThrown);
+            }
+        }
+    });
+
+    return new monaco.Promise(onSuccess, () => { });
+    //let promise = monaco.Promise()
 }
 
 function callServer(url, callback, errorCallback) {

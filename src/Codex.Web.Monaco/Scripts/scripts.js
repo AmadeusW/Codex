@@ -68,7 +68,7 @@ function registerProviders() {
 //        editor.setValue(data.contents);
 //    });
 //}
-function openEditor(input /* { resource: string; selection?: monaco.Range} */) {
+function openEditor(input) {
     alert(input.resource);
     var model = models[input.resource];
     if (model) {
@@ -86,7 +86,7 @@ function createModelFrom(content, project, file) {
     var key = project + "/" + file;
     return monaco.editor.createModel(content, 'csharp', monaco.Uri.parse(key));
 }
-function createEditorAndDisplayFileContent(project, file, sourceFile) {
+function createMonacoEditorAndDisplayFileContent(project, file, sourceFile) {
     editor = undefined;
     sourceFileModel = sourceFile;
     if (!editor) {
@@ -97,76 +97,31 @@ function createEditorAndDisplayFileContent(project, file, sourceFile) {
                 registerProviders();
                 currentTextModel = createModelFrom(sourceFileModel.contents, project, file);
                 editor = monaco.editor.create(editorPane, {
-                    //model: models["bar/a"],
-                    model: currentTextModel
+                    // Don't need to specify a language, because model carries this information around.
+                    model: currentTextModel,
+                    readOnly: true,
+                    lineNumbers: "on",
+                    scrollBeyondLastLine: true
                 }, {
                     editorService: { openEditor: openEditor },
                 });
-                //var value = valueFactory();
-                //var model = createModelFrom(value.contents, project, file);
-                ////editor = monaco.editor.create(editorPane,
-                ////    {
-                ////        //value: value.contents,
-                ////        model: model,
-                ////        language: 'csharp',
-                ////        readOnly: true,
-                ////        lineNumbers: true,
-                ////        scrollBeyondLastLine: true,
-                ////        roundedSelection: true
-                ////    },
-                ////    { editorService: { openEditor: openEditor } }
-                ////);
-                //editor = monaco.editor.create(editorPane,
-                //    { model: model },
-                //    {
-                //        editorService: { openEditor: openEditor },
-                //        //textModelService: { createModelReference: createModelReference}
-                //    }
-                //);
-                //editor.focus();
-                //var position = { lineNumber: value.position.lineNumber, column: value.position.column };
-                //editor.revealPositionInCenter(position);
-                //editor.setPosition(position);
-                //editor.deltaDecorations([],
-                //[
-                //    {
-                //        range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
-                //        options: { className: 'highlightLine', isWholeLine: true }
-                //    }
-                //]);
-                //editor.setSelection({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column + value.position.length });
+                editor.focus();
+                if (sourceFile.span) {
+                    var monacoPosition = currentTextModel.getPositionAt(sourceFile.span.position);
+                    var position = { lineNumber: monacoPosition.lineNumber, column: monacoPosition.column };
+                    editor.revealPositionInCenter(position);
+                    editor.setPosition(position);
+                    editor.deltaDecorations([], [
+                        {
+                            range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
+                            options: { className: 'highlightLine', isWholeLine: true }
+                        }
+                    ]);
+                    editor.setSelection({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column + sourceFile.span.length });
+                }
             });
         }
     }
-    //else {
-    //    editor.setValue("asdfasdfa");
-    //    //editor.render();
-    //    //editor.getModel()._lines = ["asdf", "asdf"];
-    //    //editor.setValue(valueFactory());
-    //}
-}
-function loadMonacoEditorWithSourceFile(project, fileName, sourceFile) {
-    createEditorAndDisplayFileContent(project, fileName, sourceFile);
-    //if (editor) {
-    //    editor.setValue(content);
-    //    editor.render();
-    //}
-    //require.config({ paths: { 'vs': 'node_modules/monaco-editor/dev/vs' } });
-    //var editorPane = document.getElementById('editorPane');
-    //if (editorPane) {
-    //    require(['vs/editor/editor.main'],
-    //        function () {
-    //            editor = monaco.editor.create(editorPane,
-    //            {
-    //                value: content,
-    //                language: 'csharp',
-    //                readOnly: true,
-    //                lineNumbers: true,
-    //                scrollBeyondLastLine: true,
-    //                roundedSelection: true
-    //            });
-    //        });
-    //}
 }
 function ReplaceCurrentState() {
     history.replaceState(currentState, currentState.windowTitle, getUrlForState(currentState));
@@ -413,7 +368,7 @@ function LoadSourceCodeCore(project, file, symbolId, lineNumber) {
     //    return;
     //}
     var url = "/source/" + encodeURI(project) + "/?filename=" + encodeURIComponent(file) + "&partial=true";
-    var contentsUrl = "/sourcecontent/" + encodeURI(project) + "/?filename=" + encodeURIComponent(file);
+    var contentsUrl = "/sourcecontent/" + encodeURI(project) + "/?fileName=" + encodeURIComponent(file);
     FillRightPane(url, symbolId, lineNumber, contentsUrl, project, file);
 }
 function FillRightPane(url, symbolId, lineNumber, contentsUrl, project, file) {
@@ -423,7 +378,12 @@ function FillRightPane(url, symbolId, lineNumber, contentsUrl, project, file) {
             callServer(contentsUrl, function (sourceFileData) {
                 var filePath = getFilePath();
                 if (filePath) {
-                    loadMonacoEditorWithSourceFile(project, file, sourceFileData);
+                    var definitionUrl = "/definitionlocation/" + encodeURI(project) + "/?symbolId=" + encodeURIComponent(symbolId);
+                    callServer(definitionUrl, function (sfd) {
+                        // TODO: this is extremely strange to get this stuff!!!
+                        sourceFileData.span = sfd.span;
+                        createMonacoEditorAndDisplayFileContent(project, file, sourceFileData);
+                    }, function () { });
                 }
             }, function () { });
         }
@@ -514,6 +474,23 @@ function LoadNamespacesCore(project) {
     }, function (error) {
         setLeftPane("<div class='note'>" + error + "</div>");
     });
+}
+function server(url) {
+    function onSuccess(data) {
+        return data;
+    }
+    $.ajax({
+        url: url,
+        type: "GET",
+        success: onSuccess,
+        error: function (jqXHR, textStatus, errorThrown) {
+            if (textStatus !== "abort") {
+                //errorCallback(jqXHR + "\n" + textStatus + "\n" + errorThrown);
+            }
+        }
+    });
+    return new monaco.Promise(onSuccess, function () { });
+    //let promise = monaco.Promise()
 }
 function callServer(url, callback, errorCallback) {
     $.ajax({
@@ -807,3 +784,4 @@ function t(sender) {
         elements[i].style.background = "cyan";
     }
 }
+//# sourceMappingURL=scripts.js.map
