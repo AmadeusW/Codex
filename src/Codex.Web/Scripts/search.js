@@ -139,13 +139,13 @@ function selectNextResult() {
         selectedUIElement.removeClass("selectedResult");
     }
 
-    if (selectedResultGroup == null) { // Nothing is selected. Select the first group.
+    if (selectedResultGroup == null || !selectedResultGroup.length) { // Nothing is selected. Select the first group.
         selectedResultGroup = $(".resultGroup").first();
         selectedUIElement = selectedResultGroup.children(".resultGroupHeader").first();
     }
     else {
         if (selectedResultGroup.children().not(".resultGroupHeader").first().css("display") != "none") {
-            if (selectedResult == null) { // Select the first result
+            if (selectedResult == null || !selectedResult.length) { // Select the first result
                 var resultContainer = selectedResultGroup.children().not(".resultGroupHeader").first();
                 var resultLink = resultContainer.children("a").first();
                 selectedResult = resultLink.children(".resultItem").first();
@@ -194,7 +194,7 @@ function selectPreviousResult() {
         selectedUIElement.removeClass("selectedResult");
     }
 
-    if (selectedResult == null) {
+    if (selectedResult == null && selectedResult.length) {
         // Last result
         selectedResultGroup = selectedResultGroup.prev(".resultGroup");
         if (selectedResultGroup.children().not(".resultGroupHeader").first().css("display") != "none") {
@@ -206,6 +206,7 @@ function selectPreviousResult() {
             }
             else {
                 // We've reached the beginning of the list
+                $("#leftPane").scrollTop(0); // scroll to the very top
                 return;
             }
         }
