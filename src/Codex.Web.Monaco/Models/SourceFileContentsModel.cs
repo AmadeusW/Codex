@@ -27,20 +27,30 @@ namespace Codex.Web.Monaco.Models
         public Span span { get; set; }
     }
 
-    public class SourceFileContentsModel
+    public class SegmentModel
     {
-        public string contents { get; set; }
-
-        public Span position { get; set; }
-
         public List<SymbolSpan> definitions { get; set; } = new List<SymbolSpan>(0);
         public List<SymbolSpan> references { get; set; } = new List<SymbolSpan>(0);
+    }
 
-        public string view { get; set; }
+    public class SourceFileContentsModel
+    {
+        public Span span;
+        public string contents { get; set; }
+
+        public string projectId { get; set; }
+        public string filePath { get; set; }
+
+        public List<SegmentModel> segments { get; set; } = new List<SegmentModel>();
+
+        public int segmentLength { get; set; }
 
         public async Task Populate(BoundSourceFile boundSourceFile)
         {
             contents = await boundSourceFile.SourceFile.GetContentsAsync();
+            segmentLength = contents.Length;
+            var segment = new SegmentModel();
+            segments.Add(segment);
 
             foreach (var reference in boundSourceFile.References)
             {
@@ -62,11 +72,11 @@ namespace Codex.Web.Monaco.Models
 
                 if (reference.Reference.ReferenceKind == nameof(ReferenceKind.Definition))
                 {
-                    definitions.Add(symbolSpan);
+                    segment.definitions.Add(symbolSpan);
                 }
                 else
                 {
-                    references.Add(symbolSpan);
+                    segment.references.Add(symbolSpan);
                 }
             }
         }

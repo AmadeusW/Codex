@@ -99,7 +99,12 @@ namespace WebUI.Controllers
 
             Responses.PrepareResponse(Response);
 
-            var sourceFile = new SourceFileContentsModel();
+            var sourceFile = new SourceFileContentsModel()
+            {
+                projectId = projectId,
+                filePath = filename,
+            };
+
             await sourceFile.Populate(boundSourceFile);
             return sourceFile;
         }
@@ -220,8 +225,81 @@ namespace WebUI.Controllers
             }
         }
 
-        [Route("definitionlocation/{projectId}")]
+        [Route("definitionscontents/{projectId}")]
         public async Task<ActionResult> GoToDefinitionGetContentAsync(string projectId, string symbolId)
+        {
+            try
+            {
+                Requests.LogRequest(this);
+
+                var definitions = await Storage.GetReferencesToSymbolAsync(
+                    this.GetSearchRepos(),
+                    new Symbol()
+                    {
+                        ProjectId = projectId,
+                        Id = SymbolId.UnsafeCreateWithValue(symbolId),
+                        Kind = nameof(ReferenceKind.Definition)
+                    });
+
+                definitions.Entries = definitions.Entries.Distinct(m_referenceEquator).ToList();
+
+                if (definitions.Entries.Count == 1)
+                {
+                    var definitionReference = definitions.Entries[0];
+                    var sourceFile = await GetSourceFileAsync(definitionReference.ReferringProjectId, definitionReference.File);
+                    if (sourceFile != null)
+                    {
+                        var referringSpan = definitions.Entries[0].ReferringSpan;
+                        var position = new Span()
+                        {
+                            position = referringSpan.Start,
+                            length = referringSpan.Length,
+                        };
+                        sourceFile.span = position;
+                    }
+
+                    return WrapTheModel(sourceFile);
+                }
+                else
+                {
+                    var definitionResult = await Storage.GetDefinitionsAsync(this.GetSearchRepos(), projectId, symbolId);
+                    var symbolName = definitionResult?.FirstOrDefault()?.Span.Definition.DisplayName ?? symbolId;
+                    definitions.SymbolName = symbolName ?? definitions.SymbolName;
+
+                    if (definitions.Entries.Count == 0)
+                    {
+                        definitions = await Storage.GetReferencesToSymbolAsync(
+                            this.GetSearchRepos(),
+                            new Symbol()
+                            {
+                                ProjectId = projectId,
+                                Id = SymbolId.UnsafeCreateWithValue(symbolId)
+                            });
+                    }
+
+                    var referencesText = ReferencesController.GenerateReferencesHtml(definitions);
+                    if (string.IsNullOrEmpty(referencesText))
+                    {
+                        referencesText = "No defintions found.";
+                    }
+                    else
+                    {
+                        referencesText = "<!--Definitions-->" + referencesText;
+                    }
+
+                    Responses.PrepareResponse(Response);
+
+                    return PartialView("~/Views/References/References.cshtml", referencesText);
+                }
+            }
+            catch (Exception ex)
+            {
+                return Responses.Exception(ex);
+            }
+        }
+
+        [Route("definitionlocation/{projectId}")]
+        public async Task<ActionResult> GoToDefinitionLocationAsync(string projectId, string symbolId)
         {
             try
             {

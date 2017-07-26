@@ -40,9 +40,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var defaultWindowTitle = "Index";
 var editor;
-var codexWebRootPrefix = "";
 var currentTextModel;
-var sourceFileModel;
 var currentState;
 var searchBox;
 var lastSearchString;
@@ -399,21 +397,6 @@ function LoadNamespaces(project) {
 function LoadNamespacesCore(project) {
     var url = "/namespaces/" + encodeURI(project) + "/";
     loadLeftPaneFrom(url);
-}
-function server(url) {
-    return new Promise(function (resolve, reject) {
-        $.ajax({
-            url: url,
-            type: "GET",
-            success: function (data) { resolve(data); return data; },
-            error: function (jqXHR, textStatus, errorThrown) {
-                if (textStatus !== "abort") {
-                    //errorCallback(jqXHR + "\n" + textStatus + "\n" + errorThrown);
-                    reject(new Error(jqXHR + "\n" + textStatus + "\n" + errorThrown));
-                }
-            }
-        });
-    });
 }
 function ToggleExpandCollapse(headerElement) {
     var collapsible = headerElement.nextSibling;

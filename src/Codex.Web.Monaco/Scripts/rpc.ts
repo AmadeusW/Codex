@@ -1,4 +1,25 @@
 /// <reference path="../node_modules/@types/jquery/index.d.ts"/>
+var codexWebRootPrefix: string = "";
+
+function serverWithPrefix<T>(url: string): Promise<T> {
+    return server(codexWebRootPrefix + url);
+}
+
+function server<T>(url: string): Promise<T> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: url,
+            type: "GET",
+            success: data => { resolve(data); return <T>data; },
+            error: function (jqXHR, textStatus, errorThrown) {
+                if (textStatus !== "abort") {
+                    //errorCallback(jqXHR + "\n" + textStatus + "\n" + errorThrown);
+                    reject(new Error(jqXHR + "\n" + textStatus + "\n" + errorThrown));
+                }
+            }
+        });
+    });
+}
 
 interface Span {
     position: number;
@@ -16,7 +37,7 @@ interface SegmentModel {
     references: SymbolSpan[];
 }
 
-class SourceFileContentsModel {
+interface SourceFileContentsModel {
     filePath: string;
     webLink: string;
     repoRelativePath: string;
@@ -27,55 +48,51 @@ class SourceFileContentsModel {
     segments: SegmentModel[];
     // Width int characters of segments
     segmentLength: number;
+}
 
-    getReference(position: number): SymbolSpan {
-        let segmentIndex = ~~(position / this.segmentLength);
-        if (segmentIndex >= this.segments.length) {
-            return undefined;
-        }
-
-
-        let segment = this.segments[segmentIndex];
-        if (!segment) {
-            return undefined;
-        }
-
-        for (let symbolSpan of segment.references) {
-            if (position >= symbolSpan.span.position &&
-                position <= (symbolSpan.span.position + symbolSpan.span.length)) {
-                return symbolSpan;
-            }
-        }
-
+function getReference(_this: SourceFileContentsModel, position: number): SymbolSpan {
+    let segmentIndex = ~~(position / _this.segmentLength);
+    if (segmentIndex >= _this.segments.length) {
         return undefined;
     }
 
-    getDefinition(position: number): SymbolSpan {
-        let segmentIndex = ~~(position / this.segmentLength);
-        if (segmentIndex >= this.segments.length) {
-            return undefined;
-        }
-
-        let segment = this.segments[segmentIndex];
-        if (!segment) {
-            return undefined;
-        }
-
-        for (let symbolSpan of segment.definitions) {
-            if (position >= symbolSpan.span.position &&
-                position <= (symbolSpan.span.position + symbolSpan.span.length)) {
-                return symbolSpan;
-            }
-        }
-
+    let segment = _this.segments[segmentIndex];
+    if (!segment) {
         return undefined;
     }
+
+    for (let symbolSpan of segment.references) {
+        if (position >= symbolSpan.span.position &&
+            position <= (symbolSpan.span.position + symbolSpan.span.length)) {
+            return symbolSpan;
+        }
+    }
+
+    return undefined;
 }
 
-interface DefinitionLocation {
-    referencesHtml: string;
-    sourceFile: SourceFileContentsModel;
+function getDefinition(_this: SourceFileContentsModel, position: number): SymbolSpan {
+    let segmentIndex = ~~(position / _this.segmentLength);
+    if (segmentIndex >= _this.segments.length) {
+        return undefined;
+    }
+
+    let segment = _this.segments[segmentIndex];
+    if (!segment) {
+        return undefined;
+    }
+
+    for (let symbolSpan of segment.definitions) {
+        if (position >= symbolSpan.span.position &&
+            position <= (symbolSpan.span.position + symbolSpan.span.length)) {
+            return symbolSpan;
+        }
+    }
+
+    return undefined;
 }
+
+type DefinitionLocation = string | SourceFileContentsModel;
 
 function getSourceFileContents(projectId: string, filePath: string): SourceFileContentsModel {
     return undefined;
@@ -85,6 +102,37 @@ function getFindAllReferencesHtml(projectId: string, symbolId: string): string {
     return null;
 }
 
-function getDefinitionLocation(): Promise<DefinitionLocation> {
-    return undefined;
+function getDefinitionLocation(projectId: string, symbol: string): Promise<DefinitionLocation> {
+    let url = `/definitionscontents/${encodeURI(projectId)}/?symbolId=${encodeURI(symbol)}`;
+    return serverWithPrefix<DefinitionLocation>(url);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

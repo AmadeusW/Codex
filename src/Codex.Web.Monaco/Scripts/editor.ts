@@ -5,11 +5,16 @@
 var editor;
 var codexWebRootPrefix = "";
 var currentTextModel;
-var sourceFileModel;
+var sourceFileModel : SourceFileContentsModel;
 var registered;
 
 // Required by monaco. Have no idea how to use it without it.
 declare const require: any;
+
+declare class SymbolicUri extends monaco.Uri {
+    projectId: string;
+    symbol: string;
+} 
 
 function registerProviders() {
     if (registered) {
@@ -22,8 +27,16 @@ function registerProviders() {
 
     monaco.languages.registerDefinitionProvider('csharp', {
         provideDefinition: function (model, position) {
-            var word = model.getWordAtPosition(position);
-            return { uri: monaco.Uri.parse("bar/b"), range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 } }
+            let offset = model.getOffsetAt(position);
+            let definition = getReference(sourceFileModel, offset);
+            let uri = <SymbolicUri>monaco.Uri.parse(`${encodeURI(definition.projectId)}/${encodeURI(definition.symbol)}`);
+            uri.projectId = definition.projectId;
+            uri.symbol = definition.symbol;
+
+            return {
+                uri: uri,
+                range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 }
+            }
 
             //if (word && word.word === "B") {
             //    
@@ -79,12 +92,38 @@ function registerProviders() {
 //    });
 //}
 
-function openEditor(input: { resource: string; selection?: monaco.Range}) {
-    alert(input.resource);
-    var model = models[input.resource];
-    if (model) {
+async function openEditor(input: { resource: SymbolicUri }) {
+    let definitionLocation = await getDefinitionLocation(input.resource.projectId, input.resource.symbol);
+    if (typeof definitionLocation === "string") {
+
+    } else {
+        var model = createModelFrom(
+            definitionLocation.contents,
+            definitionLocation.projectId,
+            definitionLocation.filePath);
+        sourceFileModel = definitionLocation;
+
         editor.setModel(model);
+
+        // TODO: add try/catch, refactor the logic out
+        editor.focus();
+        if (definitionLocation.span) {
+            var monacoPosition = currentTextModel.getPositionAt(definitionLocation.span.position);
+
+            var position = { lineNumber: monacoPosition.lineNumber, column: monacoPosition.column };
+            editor.revealPositionInCenter(position);
+            editor.setPosition(position);
+            editor.deltaDecorations([],
+                [
+                    {
+                        range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
+                        options: { className: 'highlightLine', isWholeLine: true }
+                    }
+                ]);
+            editor.setSelection({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column + definitionLocation.span.length });
+        }                    
     }
+
     return monaco.Promise.as(null);
 }
 
@@ -99,7 +138,8 @@ function createModelFrom(content: string, project: string, file: string) {
     }
 
     var key = `${project}/${file}`;
-    return monaco.editor.createModel(content, 'csharp', monaco.Uri.parse(key));
+    currentTextModel = monaco.editor.createModel(content, 'csharp', monaco.Uri.parse(key));
+    return currentTextModel;
 }
 
 function createMonacoEditorAndDisplayFileContent(project: string, file: string, sourceFile: SourceFileContentsModel) {
@@ -112,6 +152,11 @@ function createMonacoEditorAndDisplayFileContent(project: string, file: string, 
         if (editorPane) {
             require(['vs/editor/editor.main'],
                 function () {
+                    class SymbolicUri extends monaco.Uri {
+                        projectId: string;
+                        symbol: string;
+                    } 
+
                     registerProviders();
 
                     currentTextModel = createModelFrom(sourceFileModel.contents, project, file);

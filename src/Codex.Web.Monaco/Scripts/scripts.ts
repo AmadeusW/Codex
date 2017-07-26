@@ -6,9 +6,7 @@
 
 var defaultWindowTitle = "Index";
 var editor;
-var codexWebRootPrefix = "";
 var currentTextModel;
-var sourceFileModel;
 var currentState: CodexWebState;
 
 var searchBox: any;
@@ -403,22 +401,6 @@ function LoadNamespaces(project) {
 function LoadNamespacesCore(project) {
     var url = "/namespaces/" + encodeURI(project) + "/";
     loadLeftPaneFrom(url);
-}
-
-function server<T>(url: string): Promise<T> {
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            url: url,
-            type: "GET",
-            success: data => { resolve(data); return <T>data; },
-            error: function (jqXHR, textStatus, errorThrown) {
-                if (textStatus !== "abort") {
-                    //errorCallback(jqXHR + "\n" + textStatus + "\n" + errorThrown);
-                    reject(new Error(jqXHR + "\n" + textStatus + "\n" + errorThrown));
-                }
-            }
-        });
-    });
 }
 
 function ToggleExpandCollapse(headerElement) {
