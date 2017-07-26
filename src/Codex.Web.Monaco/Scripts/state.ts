@@ -25,7 +25,7 @@ interface CodexWebState {
     leftSymbolId: string;
     projectScope: string;
     rightSymbolId: string;
-    lineNumber: string;
+    lineNumber: number;
     searchText: string;
     windowTitle: string;
     leftPaneContent: LeftPaneContent;

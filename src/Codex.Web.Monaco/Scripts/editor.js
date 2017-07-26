@@ -47,21 +47,16 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var editor;
-var codexWebRootPrefix = "";
-var currentTextModel;
-var sourceFileModel;
-var registered;
 function registerProviders() {
-    if (registered) {
+    if (state.editorRegistered) {
         return;
     }
-    registered = true;
+    state.editorRegistered = true;
     monaco.languages.register({ id: 'csharp' });
     monaco.languages.registerDefinitionProvider('csharp', {
         provideDefinition: function (model, position) {
             var offset = model.getOffsetAt(position);
-            var reference = getReference(sourceFileModel, offset);
+            var reference = getReference(state.sourceFileModel, offset);
             var uri = monaco.Uri.parse(encodeURI(reference.projectId) + "/" + encodeURI(reference.symbol));
             uri.projectId = reference.projectId;
             uri.symbol = reference.symbol;
@@ -69,10 +64,6 @@ function registerProviders() {
                 uri: uri,
                 range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 }
             };
-            //if (word && word.word === "B") {
-            //    
-            //}
-            //return null;
         }
     });
     monaco.languages.registerReferenceProvider('csharp', {
@@ -112,8 +103,8 @@ function registerProviders() {
 }
 function getReferencesHtmlAtPosition(editor) {
     var position = editor.getPosition();
-    var offset = currentTextModel.getOffsetAt(position);
-    var definition = getDefinition(sourceFileModel, offset) || getReference(sourceFileModel, offset);
+    var offset = state.currentTextModel.getOffsetAt(position);
+    var definition = getDefinition(state.sourceFileModel, offset) || getReference(state.sourceFileModel, offset);
     if (!definition) {
         return Promise.resolve(undefined);
     }
@@ -123,7 +114,7 @@ function getReferencesHtmlAtPosition(editor) {
 //    alert(input.resource);
 //    var uri = input.resource;
 //    return callServer(uri, function(data) {
-//        editor.setValue(data.contents);
+//        state.editor.setValue(data.contents);
 //    });
 //}
 function openEditor(input) {
@@ -138,22 +129,22 @@ function openEditor(input) {
                     }
                     else {
                         model = createModelFrom(definitionLocation.contents, definitionLocation.projectId, definitionLocation.filePath);
-                        sourceFileModel = definitionLocation;
-                        editor.setModel(model);
+                        state.sourceFileModel = definitionLocation;
+                        state.editor.setModel(model);
                         // TODO: add try/catch, refactor the logic out
-                        editor.focus();
+                        state.editor.focus();
                         if (definitionLocation.span) {
-                            monacoPosition = currentTextModel.getPositionAt(definitionLocation.span.position);
+                            monacoPosition = state.currentTextModel.getPositionAt(definitionLocation.span.position);
                             position = { lineNumber: monacoPosition.lineNumber, column: monacoPosition.column };
-                            editor.revealPositionInCenter(position);
-                            editor.setPosition(position);
-                            editor.deltaDecorations([], [
+                            state.editor.revealPositionInCenter(position);
+                            state.editor.setPosition(position);
+                            state.editor.deltaDecorations([], [
                                 {
                                     range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
                                     options: { className: 'highlightLine', isWholeLine: true }
                                 }
                             ]);
-                            editor.setSelection({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column + definitionLocation.span.length });
+                            state.editor.setSelection({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column + definitionLocation.span.length });
                         }
                     }
                     return [2 /*return*/, monaco.Promise.as(null)];
@@ -165,17 +156,17 @@ var models;
 //var models = {
 //};
 function createModelFrom(content, project, file) {
-    if (currentTextModel) {
-        currentTextModel.dispose();
+    if (state.currentTextModel) {
+        state.currentTextModel.dispose();
     }
     var key = project + "/" + file;
-    currentTextModel = monaco.editor.createModel(content, 'csharp', monaco.Uri.parse(key));
-    return currentTextModel;
+    state.currentTextModel = monaco.editor.createModel(content, 'csharp', monaco.Uri.parse(key));
+    return state.currentTextModel;
 }
 function createMonacoEditorAndDisplayFileContent(project, file, sourceFile, lineNumber) {
-    editor = undefined;
-    sourceFileModel = sourceFile;
-    if (!editor) {
+    state.editor = undefined;
+    state.sourceFileModel = sourceFile;
+    if (!state.editor) {
         require.config({ paths: { 'vs': 'node_modules/monaco-editor/dev/vs' } });
         var editorPane = document.getElementById('editorPane');
         if (editorPane) {
@@ -188,17 +179,17 @@ function createMonacoEditorAndDisplayFileContent(project, file, sourceFile, line
                     return SymbolicUri;
                 }(monaco.Uri));
                 registerProviders();
-                currentTextModel = createModelFrom(sourceFileModel.contents, project, file);
-                editor = monaco.editor.create(editorPane, {
+                state.currentTextModel = createModelFrom(state.sourceFileModel.contents, project, file);
+                state.editor = monaco.editor.create(editorPane, {
                     // Don't need to specify a language, because model carries this information around.
-                    model: currentTextModel,
+                    model: state.currentTextModel,
                     readOnly: true,
                     lineNumbers: "on",
                     scrollBeyondLastLine: true
                 }, {
                     editorService: { openEditor: openEditor },
                 });
-                editor.addAction({
+                state.editor.addAction({
                     // An unique identifier of the contributed action.
                     id: 'Codex.FindAllReferences.LeftPane',
                     // A label of the action that will be presented to the user.
@@ -214,42 +205,35 @@ function createMonacoEditorAndDisplayFileContent(project, file, sourceFile, line
                     // Method that will be executed when the action is triggered.
                     // @param editor The editor instance is passed in as a convinience
                     run: function (ed) {
-                        return __awaiter(this, void 0, void 0, function () {
-                            var referencesHtml;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0: return [4 /*yield*/, getReferencesHtmlAtPosition(ed)];
-                                    case 1:
-                                        referencesHtml = _a.sent();
-                                        if (referencesHtml) {
-                                            updateReferences(referencesHtml);
-                                        }
-                                        return [2 /*return*/];
-                                }
-                            });
-                        });
+                        //let referencesHtml = getFindAllReferencesHtml()
+                        var referencesHtml = getReferencesHtmlAtPosition(ed)
+                            .then(function (html) {
+                            if (html) {
+                                updateReferences(html);
+                            }
+                        }, function (e) { });
                     }
                 });
-                editor.focus();
+                state.editor.focus();
                 var position;
                 var length = 0;
                 if (sourceFile.span) {
-                    position = currentTextModel.getPositionAt(sourceFile.span.position);
+                    position = state.currentTextModel.getPositionAt(sourceFile.span.position);
                     length = sourceFile.span.length;
                 }
                 else if (lineNumber) {
                     position = { lineNumber: lineNumber, column: 1 };
                 }
                 if (position) {
-                    editor.revealPositionInCenter(position);
-                    editor.setPosition(position);
-                    editor.deltaDecorations([], [
+                    state.editor.revealPositionInCenter(position);
+                    state.editor.setPosition(position);
+                    state.editor.deltaDecorations([], [
                         {
                             range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
                             options: { className: 'highlightLine', isWholeLine: true }
                         }
                     ]);
-                    editor.setSelection({
+                    state.editor.setSelection({
                         startLineNumber: position.lineNumber,
                         startColumn: position.column,
                         endLineNumber: position.lineNumber,

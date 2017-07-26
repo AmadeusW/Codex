@@ -23,7 +23,7 @@ function registerProviders() {
     monaco.languages.registerDefinitionProvider('csharp', {
         provideDefinition: function (model, position) {
             let offset = model.getOffsetAt(position);
-            let reference = getReference(sourceFileModel, offset);
+            let reference = getReference(state.sourceFileModel, offset);
             let uri = <SymbolicUri>monaco.Uri.parse(`${encodeURI(reference.projectId)}/${encodeURI(reference.symbol)}`);
             uri.projectId = reference.projectId;
             uri.symbol = reference.symbol;
@@ -77,9 +77,9 @@ function registerProviders() {
 function getReferencesHtmlAtPosition(editor: monaco.editor.IEditor) : Promise<string> {
     let position = editor.getPosition();
     
-    let offset = currentTextModel.getOffsetAt(position);
+    let offset = state.currentTextModel.getOffsetAt(position);
 
-    let definition = getDefinition(sourceFileModel, offset) || getReference(sourceFileModel, offset);
+    let definition = getDefinition(state.sourceFileModel, offset) || getReference(state.sourceFileModel, offset);
 
     if (!definition) {
         return Promise.resolve(undefined);
@@ -146,7 +146,7 @@ function createModelFrom(content: string, project: string, file: string) {
     return state.currentTextModel;
 }
 
-function createMonacoEditorAndDisplayFileContent(project: string, file: string, sourceFile: SourceFileContentsModel) {
+function createMonacoEditorAndDisplayFileContent(project: string, file: string, sourceFile: SourceFileContentsModel, lineNumber: number) {
     state.editor = undefined;
     state.sourceFileModel = sourceFile;
     if (!state.editor) {
@@ -177,7 +177,7 @@ function createMonacoEditorAndDisplayFileContent(project: string, file: string, 
                         }
                     );
 
-                    editor.addAction({
+                    state.editor.addAction({
                         // An unique identifier of the contributed action.
                         id: 'Codex.FindAllReferences.LeftPane',
 
@@ -199,29 +199,33 @@ function createMonacoEditorAndDisplayFileContent(project: string, file: string, 
 
                         // Method that will be executed when the action is triggered.
                         // @param editor The editor instance is passed in as a convinience
-                        run: async function (ed) {
+                        run: function (ed) {
                             //let referencesHtml = getFindAllReferencesHtml()
-                            let referencesHtml = await getReferencesHtmlAtPosition(ed);
-                            if (referencesHtml) {
-                                updateReferences(referencesHtml);
-                            }
+                            let referencesHtml = getReferencesHtmlAtPosition(ed)
+                                .then(html => {
+                                    if (html) {
+                                        updateReferences(html);
+                                    }
+                                },
+                                e => { }
+                            );
                         }
                     });
                     
-                    editor.focus();
+                    state.editor.focus();
                     let position;
                     let length = 0;
                     if (sourceFile.span) {
-                        position = currentTextModel.getPositionAt(sourceFile.span.position);
+                        position = state.currentTextModel.getPositionAt(sourceFile.span.position);
                         length = sourceFile.span.length;
                     } else if (lineNumber) {
                         position = { lineNumber: lineNumber, column: 1 }
                     }
 
                     if (position) {
-                        editor.revealPositionInCenter(position);
-                        editor.setPosition(position);
-                        editor.deltaDecorations([],
+                        state.editor.revealPositionInCenter(position);
+                        state.editor.setPosition(position);
+                        state.editor.deltaDecorations([],
                             [
                                 {
                                     range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
@@ -229,7 +233,7 @@ function createMonacoEditorAndDisplayFileContent(project: string, file: string, 
                                 }
                             ]);
 
-                        editor.setSelection({
+                        state.editor.setSelection({
                             startLineNumber: position.lineNumber,
                             startColumn: position.column,
                             endLineNumber: position.lineNumber,

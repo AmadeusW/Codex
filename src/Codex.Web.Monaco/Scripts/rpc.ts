@@ -1,7 +1,7 @@
 /// <reference path="../node_modules/@types/jquery/index.d.ts"/>
 
 function serverWithPrefix<T>(url: string): Promise<T> {
-    return server(codexWebRootPrefix + url);
+    return server(state.codexWebRootPrefix + url);
 }
 
 function server<T>(url: string): Promise<T> {

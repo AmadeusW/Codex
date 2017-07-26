@@ -4,11 +4,6 @@
 /// <reference path="editor.ts"/>
 /// <reference path="state.ts"/>
 
-var searchBox: any;
-var lastSearchString;
-
-var selectedFile;
-
 // For type safety reasons. The function defined in another js file right now.
 declare function LoadSearchCore(searchText);
 
@@ -80,8 +75,8 @@ function DisplayState(newState: CodexWebState) {
     }
     else {
         resetLeftPane();
-        searchBox.value = "";
-        lastSearchString = "";
+        state.searchBox.value = "";
+        state.lastSearchString = "";
     }
 
     if (newState.rightPaneContent == "file") {
@@ -643,7 +638,7 @@ function getFilePath(): string {
 }
 
 function selectFile(a) {
-    var selected = selectedFile;
+    var selected = state.selectedFile;
     if (selected === a) {
         return;
     }
@@ -652,7 +647,7 @@ function selectFile(a) {
         selected.classList.remove("selectedFilename");
     }
 
-    selectedFile = a;
+    state.selectedFile = a;
     if (a) {
         if (a.classList) {
             a.classList.add("selectedFilename");
