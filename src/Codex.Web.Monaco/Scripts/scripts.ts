@@ -299,13 +299,20 @@ async function FillRightPane(url: string, symbolId: string, lineNumber: number, 
         displayFile(data, symbolId, lineNumber);
 
         let sourceFileData = await getSourceFileContents(project, file);
+        if (symbolId) {
+            let definitionSpan = getDefinitionForSymbol(sourceFileData, symbolId);
+            if (definitionSpan) {
+                sourceFileData.span = definitionSpan.span;
+            }
+        }
+
         createMonacoEditorAndDisplayFileContent(project, file, sourceFileData, lineNumber);
         let bottomPaneInnerHtml = document.getElementById("bottomPaneHidden").innerHTML;
-        bottomPaneInnerHtml = bottomPaneInnerHtml
-            .replace("{filePath}", file)
-            .replace("{projectId}", project)
-            .replace("{repoRelativePath}", sourceFileData.repoRelativePath || "")
-            .replace("{webLink}", sourceFileData.webLink || "");
+        bottomPaneInnerHtml = replaceAll(replaceAll(replaceAll(replaceAll(bottomPaneInnerHtml,
+            "{filePath}", file),
+            "{projectId}", project),
+            "{repoRelativePath}", sourceFileData.repoRelativePath || ""),
+            "{webLink}", sourceFileData.webLink || "");
         document.getElementById("bottomPane").innerHTML = bottomPaneInnerHtml;
     }
     catch (e) {

@@ -54,6 +54,21 @@ function getDefinition(_this, position) {
     }
     return undefined;
 }
+function getDefinitionForSymbol(_this, symbolId) {
+    if (!_this.segments) {
+        return undefined;
+    }
+    for (var _i = 0, _a = _this.segments; _i < _a.length; _i++) {
+        var segment = _a[_i];
+        for (var _b = 0, _c = segment.definitions; _b < _c.length; _b++) {
+            var symbolSpan = _c[_b];
+            if (symbolSpan.symbol === symbolId) {
+                return symbolSpan;
+            }
+        }
+    }
+    return undefined;
+}
 function getSourceFileContents(projectId, filePath) {
     var url = "/sourcecontent/" + encodeURI(projectId) + "/?filename=" + encodeURI(filePath);
     return serverWithPrefix(url);

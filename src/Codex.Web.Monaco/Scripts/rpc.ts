@@ -92,6 +92,22 @@ function getDefinition(_this: SourceFileContentsModel, position: number): Symbol
     return undefined;
 }
 
+function getDefinitionForSymbol(_this: SourceFileContentsModel, symbolId: string): SymbolSpan {
+    if (!_this.segments) {
+        return undefined;
+    }
+
+    for (let segment of _this.segments) {
+        for (let symbolSpan of segment.definitions) {
+            if (symbolSpan.symbol === symbolId) {
+                return symbolSpan;
+            }
+        }
+    }
+
+    return undefined;
+}
+
 type DefinitionLocation = string | SourceFileContentsModel;
 
 function getSourceFileContents(projectId: string, filePath: string): Promise<SourceFileContentsModel> {

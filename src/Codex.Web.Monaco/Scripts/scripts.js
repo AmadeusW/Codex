@@ -291,7 +291,7 @@ function LoadSourceCodeCore(project, file, symbolId, lineNumber) {
 }
 function FillRightPane(url, symbolId, lineNumber, project, file) {
     return __awaiter(this, void 0, void 0, function () {
-        var data, sourceFileData, bottomPaneInnerHtml, e_1;
+        var data, sourceFileData, definitionSpan, bottomPaneInnerHtml, e_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -303,13 +303,15 @@ function FillRightPane(url, symbolId, lineNumber, project, file) {
                     return [4 /*yield*/, getSourceFileContents(project, file)];
                 case 2:
                     sourceFileData = _a.sent();
+                    if (symbolId) {
+                        definitionSpan = getDefinitionForSymbol(sourceFileData, symbolId);
+                        if (definitionSpan) {
+                            sourceFileData.span = definitionSpan.span;
+                        }
+                    }
                     createMonacoEditorAndDisplayFileContent(project, file, sourceFileData, lineNumber);
                     bottomPaneInnerHtml = document.getElementById("bottomPaneHidden").innerHTML;
-                    bottomPaneInnerHtml = bottomPaneInnerHtml
-                        .replace("{filePath}", file)
-                        .replace("{projectId}", project)
-                        .replace("{repoRelativePath}", sourceFileData.repoRelativePath || "")
-                        .replace("{webLink}", sourceFileData.webLink || "");
+                    bottomPaneInnerHtml = replaceAll(replaceAll(replaceAll(replaceAll(bottomPaneInnerHtml, "{filePath}", file), "{projectId}", project), "{repoRelativePath}", sourceFileData.repoRelativePath || ""), "{webLink}", sourceFileData.webLink || "");
                     document.getElementById("bottomPane").innerHTML = bottomPaneInnerHtml;
                     return [3 /*break*/, 4];
                 case 3:
@@ -673,4 +675,25 @@ function t(sender) {
     for (var i = 0; i < elements.length; i++) {
         elements[i].style.background = "cyan";
     }
+}
+function replaceAll(originalString, oldValue, newValue, ignoreCase) {
+    if (ignoreCase === void 0) { ignoreCase = false; }
+    //
+    // if invalid data, return the original string
+    //
+    if ((originalString == null) || (oldValue == null) || (newValue == null) || (oldValue.length == 0))
+        return (originalString);
+    //
+    // set search/replace flags
+    //
+    var Flags = (ignoreCase) ? "gi" : "g";
+    //
+    // apply regex escape sequence on pattern (oldValue)
+    //
+    var pattern = oldValue.replace(/[-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+    //
+    // replace oldValue with newValue
+    //
+    var str = originalString.replace(new RegExp(pattern, Flags), newValue);
+    return (str);
 }
