@@ -103,7 +103,7 @@ function resetSelectedResult() {
 }
 
 function expandResult() {
-    if (selectedUIElement == null) {
+    if (selectedUIElement == null || !selectedUIElement.length) {
         return;
     }
     if (selectedUIElement.is('.resultItem')) { // Selected item is a single result
@@ -116,7 +116,7 @@ function expandResult() {
 }
 
 function collapseResult() {
-    if (selectedUIElement == null) {
+    if (selectedUIElement == null || !selectedUIElement.length) {
         return;
     }
     if (selectedUIElement.is('.resultItem')) { // Selected item is a single result
@@ -165,6 +165,7 @@ function selectNextResult() {
                     }
                     else {
                         // We've reached the end of the list
+                        selectedUIElement = null;
                         return;
                     }
                 }
@@ -178,6 +179,7 @@ function selectNextResult() {
             }
             else {
                 // We've reached the end of the list
+                selectedUIElement = null;
                 return;
             }
         }
@@ -206,6 +208,8 @@ function selectPreviousResult() {
             }
             else {
                 // We've reached the beginning of the list
+                selectedResult = null;
+                selectedUIElement = null;
                 $("#leftPane").scrollTop(0); // scroll to the very top
                 return;
             }
@@ -230,6 +234,7 @@ function selectPreviousResult() {
             }
             else {
                 // We've reached the beginning
+                selectedUIElement = null;
                 $("#leftPane").scrollTop(0); // scroll to the very top
                 return;
             }
