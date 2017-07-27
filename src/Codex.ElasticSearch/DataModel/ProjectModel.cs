@@ -57,5 +57,24 @@ namespace Codex.Storage.DataModel
             ReferencedProjects.AddRange(referencedProjects.Select(r => new ReferencedProjectModel() { ProjectId = r }));
             return this;
         }
+
+        public IEnumerable<DefinitionSearchSpanModel> GetSearchDefinitions()
+        {
+            foreach (var referencedProject in ReferencedProjects)
+            {
+                foreach (var referencedSymbol in referencedProject.Definitions)
+                {
+                    yield return new DefinitionSearchSpanModel()
+                    {
+                        Uid = $"Referenced:{referencedSymbol.ProjectId}|{referencedSymbol.Id}",
+                        IsReferencedSymbol = true,
+                        Span = new DefinitionSpanModel()
+                        {
+                            Definition = referencedSymbol
+                        }
+                    };
+                }
+            }
+        }
     }
 }

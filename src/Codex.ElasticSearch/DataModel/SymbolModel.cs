@@ -9,6 +9,15 @@ namespace Codex.Storage.DataModel
 
     public class DefinitionSymbolModel : SymbolModel
     {
+        [DataString]
+        public string Comment { get; set; }
+
+        [DataString]
+        public string TypeName { get; set; }
+
+        [DataString]
+        public string ShortDisplayName { get; set; }
+
         /// <summary>
         /// The display name of the symbol
         /// </summary>

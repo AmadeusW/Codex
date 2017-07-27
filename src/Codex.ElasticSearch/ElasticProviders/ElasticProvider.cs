@@ -303,9 +303,20 @@ namespace Codex.Storage.ElasticProviders
             {
                 targetIndexName = targetIndexName ?? await CreateSourcesIndexForRepoIfNeeded(projectModel.RepositoryName);
 
-                return await client
-                    .IndexAsync(projectModel, p => p.Index(targetIndexName).Type(ProjectTypeName)
-                    .Id(projectModel.Id));
+                var bulkDescriptor = new BulkDescriptor();
+                bulkDescriptor.Index<ProjectModel>(
+                        bd => bd.Index(targetIndexName).Type(ProjectTypeName).Id(projectModel.Id).Document(projectModel));
+
+                foreach (var searchDefinition in projectModel.GetSearchDefinitions())
+                {
+                    bulkDescriptor.Index<DefinitionSearchSpanModel>(
+                        bd => bd
+                        .Index(targetIndexName)
+                        .Type(SearchDefinitionTypeName)
+                        .Document(searchDefinition));
+                }
+
+                return await client.BulkAsync(bulkDescriptor);
             });
         }
 
@@ -1059,14 +1070,27 @@ namespace Codex.Storage.ElasticProviders
         private static IEnumerable<Func<QueryContainerDescriptor<DefinitionSearchSpanModel>, QueryContainer>>
             GetTermsFilters(string[] terms, bool boostOnly = false)
         {
+            bool allowReferencedDefinitions = false;
             foreach (var term in terms)
             {
-                yield return fq => ApplyTermFilter(term, fq, boostOnly);
+                if (term == "@all")
+                {
+                    allowReferencedDefinitions = true;
+                }
+                else
+                {
+                    yield return fq => ApplyTermFilter(term, fq, boostOnly);
+                }
             }
 
             if (!boostOnly)
             {
                 yield return fq => fq.Bool(bqd => bqd.MustNot(fq1 => fq1.Term(dss => dss.Span.Definition.ExcludeFromDefaultSearch, true)));
+
+                if (!allowReferencedDefinitions)
+                {
+                    yield return fq => fq.Bool(bqd => bqd.MustNot(fq1 => fq1.Term(dss => dss.IsReferencedSymbol, true)));
+                }
             }
         }
 
