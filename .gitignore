@@ -11,8 +11,8 @@
 *.userprefs
 
 # JS files produced from the TS files
-Scripts/*.js
-Scripts/*.js.map
+**/Scripts/*.js
+**/Scripts/*.js.map
 
 # Build results
 [Dd]ebug/
