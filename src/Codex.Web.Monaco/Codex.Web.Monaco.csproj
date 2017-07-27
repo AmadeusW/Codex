@@ -432,17 +432,17 @@
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
     <Content Include="Global.asax" />
     <Content Include="packages.config" />
-    <Content Include="Scripts\_references.js" />
-    <Content Include="Scripts\bootstrap.js" />
-    <Content Include="Scripts\bootstrap.min.js" />
-    <Content Include="Scripts\jquery.validate.js" />
-    <Content Include="Scripts\jquery.validate.min.js" />
-    <Content Include="Scripts\jquery.validate.unobtrusive.js" />
-    <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
-    <Content Include="Scripts\jquery-1.10.2.js" />
-    <Content Include="Scripts\jquery-1.10.2.min.js" />
-    <Content Include="Scripts\jquery-1.10.2.min.map" />
-    <Content Include="Scripts\modernizr-2.6.2.js" />
+    <Content Include="ScriptsExternal\_references.js" />
+    <Content Include="ScriptsExternal\bootstrap.js" />
+    <Content Include="ScriptsExternal\bootstrap.min.js" />
+    <Content Include="ScriptsExternal\jquery.validate.js" />
+    <Content Include="ScriptsExternal\jquery.validate.min.js" />
+    <Content Include="ScriptsExternal\jquery.validate.unobtrusive.js" />
+    <Content Include="ScriptsExternal\jquery.validate.unobtrusive.min.js" />
+    <Content Include="ScriptsExternal\jquery-1.10.2.js" />
+    <Content Include="ScriptsExternal\jquery-1.10.2.min.js" />
+    <Content Include="ScriptsExternal\jquery-1.10.2.min.map" />
+    <Content Include="ScriptsExternal\modernizr-2.6.2.js" />
     <Content Include="Scripts\respond.js" />
     <Content Include="Scripts\respond.min.js" />
     <Content Include="Scripts\tsconfig.json" />
@@ -478,8 +478,8 @@
     <None Include="Project_Readme.html" />
     <None Include="Properties\PublishProfiles\local.pubxml" />
     <None Include="Properties\PublishProfiles\test.pubxml" />
-    <None Include="Scripts\jquery.validate-vsdoc.js" />
-    <None Include="Scripts\jquery-1.10.2.intellisense.js" />
+    <None Include="ScriptsExternal\jquery.validate-vsdoc.js" />
+    <None Include="ScriptsExternal\jquery-1.10.2.intellisense.js" />
     <Content Include="Views\DocumentOutline\DocumentOutline.cshtml" />
     <Content Include="Views\Namespaces\Namespaces.cshtml" />
     <Content Include="Views\Overview\Overview.cshtml" />
@@ -501,6 +501,7 @@
       <Name>Codex.Sdk</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

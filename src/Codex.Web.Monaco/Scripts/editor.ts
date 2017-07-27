@@ -110,13 +110,13 @@ function registerProviders() {
                     let start = Math.max(startPosition, classification.position);
                     let end = Math.min(classification.position + classification.length, endPosition);
 
-                    
-
                     if (end < startPosition) {
                         classificationIndex++;
                     } else if (classification.position <= endPosition) {
                         if (lastPosition < start) {
                             tokens[tokenIndex] = {
+                                // Tokens only specify start index so a token needs to be added
+                                // to indicate end index / span between colorized spans. scopes = '' means no colorization
                                 scopes: '',
                                 startIndex: lastPosition - startPosition
                             };
@@ -129,6 +129,8 @@ function registerProviders() {
                             classificationIndex++;
                         }
 
+                        // Add actual token for colorized span. NOTE: This is only the start. The end
+                        // is specified later when we encounter the next colorized span or end of line
                         tokens[tokenIndex] = {
                             scopes: 'cdx.' + classification.name,
                             startIndex: start - startPosition
@@ -140,13 +142,14 @@ function registerProviders() {
                 }
 
                 if (lastPosition < endPosition) {
+                    // Tokens only specify start index so a token needs to be added
+                    // to indicate end index / span between colorized spans. scopes = '' means no colorization
                     tokens[tokenIndex] = {
                         scopes: '',
                         startIndex: lastPosition - startPosition
                     };
                 }
             }
-
 
             return {
                 tokens: tokens,
