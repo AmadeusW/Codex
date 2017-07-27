@@ -60,16 +60,17 @@ function generateToolTipHeader(toolTip: ToolTip): monaco.MarkedString {
         value = value.substr(0, value.length - 1);
     }
 
+    // TODO: not safe.
     return { language: 'csharp', value: value };
 }
 
 function generateToolTipBody(toolTip: ToolTip): monaco.MarkedString[] {
 
     // This could be a hyperlink.
-    let result: string = `Defined at **${toolTip.projectId}**`;
+    let result: string = `Project **${toolTip.projectId}**`;
 
     if (toolTip.comment) {
-        result += `: *${extractSummaryText(toolTip.comment).trim()}*`;
+        result += `  \r\n*${extractSummaryText(toolTip.comment).trim()}*`;
     }
 
     return [result];
