@@ -6,21 +6,176 @@
 // Required by monaco. Have no idea how to use it without it.
 declare const require: any;
 
+// This is weird, but we can only declare type here, but can't define it.
+// The monaco itself could be not loaded here yet.
 declare class SymbolicUri extends monaco.Uri {
     projectId: string;
     symbol: string;
-} 
+}
 
-function registerProviders() {
+const codexLanguage = 'cdx';
+
+function createModelFrom(content: string, project: string, file: string) {
+    if (state.currentTextModel) {
+        state.currentTextModel.dispose();
+    }
+
+    var key = `${project}/${file}`;
+    state.currentTextModel = monaco.editor.createModel(content, codexLanguage, monaco.Uri.parse(key));
+    return state.currentTextModel;
+}
+
+function createMonacoEditorAndDisplayFileContent(project: string, file: string, sourceFile: SourceFileContentsModel, lineNumber: number) {
+    // Need to initialize the edit each time now.
+    state.editor = undefined;
+    state.sourceFileModel = sourceFile;
+
+    if (!state.editor) {
+        require.config({ paths: { 'vs': 'node_modules/monaco-editor/dev/vs' } });
+
+        var editorPane = document.getElementById('editorPane');
+        if (editorPane) {
+            require(['vs/editor/editor.main'],
+                function () {
+                    // Need to define a class that extends the monaco.Uri
+                    // only when the monaco stuff is loaded.
+                    class SymbolicUri extends monaco.Uri {
+                        projectId: string;
+                        symbol: string;
+                    }
+
+                    registerEditorProviders();
+
+                    state.currentTextModel = createModelFrom(state.sourceFileModel.contents, project, file);
+
+                    state.editor = monaco.editor.create(editorPane, {
+                        // Don't need to specify a language, because model carries this information around.
+                        model: state.currentTextModel,
+                        readOnly: true,
+                        theme: 'codex',
+                        lineNumbers: "on",
+                        scrollBeyondLastLine: true
+                    }, { editorService: { openEditor: openEditor } });
+
+                    // Ctrl + click goes to the symbol or to the references of the symbol
+                    registerCtrlClickBehaviour(state.editor);
+                    registerEditorActions(state.editor);
+
+                    // For debugging purposes only.
+                    debugDisplayPosition(state.editor);
+
+                    changeEditorPositionTo(state.editor, sourceFile.span, lineNumber);
+                });
+        }
+    }
+    else {
+        // Not working yet. Need to fix state management first.
+        // Editor is already existed.
+        state.currentTextModel = createModelFrom(state.sourceFileModel.contents, project, file);
+        state.editor.setModel(state.currentTextModel);
+    }
+}
+
+function changeEditorPositionTo(editor: monaco.editor.IStandaloneCodeEditor, span: Span, lineNumber: number) {
+    editor.focus();
+    let position;
+    let length = 0;
+    if (span) {
+        position = state.currentTextModel.getPositionAt(span.position);
+        length = span.length;
+    } else if (lineNumber) {
+        position = { lineNumber: lineNumber, column: 1 }
+    }
+
+    if (position) {
+        editor.revealPositionInCenter(position);
+        editor.setPosition(position);
+        editor.deltaDecorations([],
+            [
+                {
+                    range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
+                    options: { className: 'highlightLine', isWholeLine: true }
+                }
+            ]);
+
+        editor.setSelection({
+            startLineNumber: position.lineNumber,
+            startColumn: position.column,
+            endLineNumber: position.lineNumber,
+            endColumn: position.column + length
+        });
+    }
+}
+
+function getSymbolAtPosition(editor: monaco.editor.IEditor, position?: monaco.IPosition): SymbolSpan {
+    position = position || editor.getPosition();
+
+    let offset = state.currentTextModel.getOffsetAt(position);
+
+    return getDefinition(state.sourceFileModel, offset) || getReference(state.sourceFileModel, offset);
+}
+
+function getReferencesHtmlAtPosition(editor: monaco.editor.IEditor): Promise<string> {
+    let definition = getSymbolAtPosition(editor);
+    if (!definition) {
+        return Promise.resolve(undefined);
+    }
+
+    return getFindAllReferencesHtml(definition.projectId, definition.symbol);
+}
+
+function getTargetAtPosition(editor: monaco.editor.IEditor): Promise<SourceFileOrView> {
+    let position = editor.getPosition();
+
+    let offset = state.currentTextModel.getOffsetAt(position);
+
+    let definition = getDefinition(state.sourceFileModel, offset);
+
+    if (definition) {
+        return getFindAllReferencesHtml(definition.projectId, definition.symbol);
+    }
+
+    let reference = getReference(state.sourceFileModel, offset);
+    if (reference) {
+        return getDefinitionLocation(reference.projectId, reference.symbol);
+    }
+
+    return Promise.resolve(undefined);
+}
+
+async function openEditor(input: { resource: SymbolicUri }) {
+    let definitionLocation = await getDefinitionLocation(input.resource.projectId, input.resource.symbol);
+    return openEditorForLocation(definitionLocation);
+}
+
+async function openEditorForLocation(source: SourceFileOrView) {
+    if (typeof source === "string") {
+        await updateReferences(source);
+    } else {
+        var model = createModelFrom(
+            source.contents,
+            source.projectId,
+            source.filePath);
+        state.sourceFileModel = source;
+
+        state.editor.setModel(model);
+
+        changeEditorPositionTo(state.editor, source.span, undefined);
+    }
+
+    return monaco.Promise.as(null);
+}
+
+function registerEditorProviders() {
     if (state.editorRegistered) {
         return;
     }
 
     state.editorRegistered = true;
 
-    monaco.languages.register({ id: 'cdx' });
+    monaco.languages.register({ id: codexLanguage });
 
-    monaco.languages.registerDocumentSymbolProvider('cdx', {
+    monaco.languages.registerDocumentSymbolProvider(codexLanguage, {
         provideDocumentSymbols: function (model) {
             let result = state.sourceFileModel.documentSymbols.map(d => {
 
@@ -42,30 +197,15 @@ function registerProviders() {
         }
     });
 
-    class CustomState implements monaco.languages.IState {
-        line: number;
-        classificationIndex: number;
-
-        constructor(line: number, classificationIndex: number) {
-            this.line = line;
-            this.classificationIndex = classificationIndex;
-        }
-
-        clone(): monaco.languages.IState {
-             return new CustomState(this.line, this.classificationIndex);
-        }
-
-        equals(other: monaco.languages.IState): boolean {
-            let otherState = <CustomState>other;
-            return otherState.line === this.line && otherState.classificationIndex === this.classificationIndex;
-        }
-
-    }
-
-    monaco.languages.registerDefinitionProvider('cdx', {
+    monaco.languages.registerDefinitionProvider(codexLanguage, {
         provideDefinition: function (model, position) {
             let offset = model.getOffsetAt(position);
             let reference = getReference(state.sourceFileModel, offset);
+            // URI is a bit weird in monaco
+            // It strips out /? part of the uri.
+            // So we're not relying on the real uri here and using
+            // uri just as a key that is required by the monaco.
+            // Real data is passed using the fields in the derived type - SymbolicUri
             let uri = <SymbolicUri>monaco.Uri.parse(`${encodeURI(reference.projectId)}/${encodeURI(reference.symbol)}`);
             uri.projectId = reference.projectId;
             uri.symbol = reference.symbol;
@@ -77,18 +217,73 @@ function registerProviders() {
         }
     });
 
-    monaco.languages.registerReferenceProvider('cdx', {
+    monaco.languages.registerReferenceProvider(codexLanguage, {
         provideReferences: function (model, position) {
-            var word = model.getWordAtPosition(position);
-            if (word && word.word === "B") {
-                return [{ uri: monaco.Uri.parse("bar/c"), range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 } }]
-            }
+            // To be implemented.
+            //var word = model.getWordAtPosition(position);
+            //if (word && word.word === "B") {
+            //    return [{ uri: monaco.Uri.parse("bar/c"), range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 } }]
+            //}
             return [];
         }
     });
 
-    
-    monaco.languages.setTokensProvider('cdx', {
+    monaco.languages.registerHoverProvider(codexLanguage, {
+        provideHover: function (model, position) {
+            let offset = model.getOffsetAt(position);
+            let reference = getReference(state.sourceFileModel, offset);
+            let uri = <SymbolicUri>monaco.Uri.parse(`${encodeURI(reference.projectId)}/${encodeURI(reference.symbol)}`);
+            uri.projectId = reference.projectId;
+            uri.symbol = reference.symbol;
+            const span = reference.span;
+
+            const left = model.getPositionAt(span.position);
+            const right = model.getPositionAt(span.position + span.length);
+
+            return getToolTip(reference.projectId, reference.symbol)
+                .then(function (res) {
+                    if (!res || !res.projectId) {
+                        return undefined;
+                    }
+
+                    return {
+                        range: new monaco.Range(left.lineNumber, left.column, right.lineNumber, right.column),
+                        contents: [
+                            `**${res.symbolKind} ${res.fullName}**`,
+                            { language: 'html', value: generateHtmlFrom(res) }
+                        ]
+                    }
+                });
+        }
+    });
+
+    /**
+     * Extra state required by the tokenizer.
+     */
+    class CustomState implements monaco.languages.IState {
+        line: number;
+        classificationIndex: number;
+
+        constructor(line: number, classificationIndex: number) {
+            this.line = line;
+            this.classificationIndex = classificationIndex;
+        }
+
+        clone(): monaco.languages.IState {
+            return new CustomState(this.line, this.classificationIndex);
+        }
+
+        equals(other: monaco.languages.IState): boolean {
+            let otherState = <CustomState>other;
+            return otherState.line === this.line && otherState.classificationIndex === this.classificationIndex;
+        }
+    }
+
+    // monaco has built-in facilities for colorizatio,
+    // but codex has better information and can colorize some stuff
+    // that can't be colorized on the syntax level (like when some dotted identifier
+    // uses a type).
+    monaco.languages.setTokensProvider(codexLanguage, {
         getInitialState: () => new CustomState(1, 0),
         tokenize: (line, tokenizerState: CustomState) => {
             let tokens: Array<monaco.languages.IToken> = [];
@@ -157,7 +352,7 @@ function registerProviders() {
             };
         }
     });
-    
+
     monaco.editor.defineTheme('codex', {
         base: 'vs',
         inherit: true,
@@ -209,289 +404,98 @@ function registerProviders() {
         ],
         colors: {}
     });
-    /*
-    */
-
-
-
-    //monaco.languages.register({ id: 'csharp' });
-    //monaco.languages.registerDefinitionProvider('csharp', {
-    //    provideDefinition: function (model, position) {
-    //        var offset = model.getOffsetAt(position);
-    //       var url = codexWebRootPrefix + "/definitionAtPosition/" + encodeURI(project) + "/?filename=" + encodeURIComponent(file) + "&position=" + encodeURIComponent(offset);
-    //       return callServer(url, function (data) {
-    //           var key = project + "/" + file;
-    //           //var uri = monaco.Uri.parse(codexWebRootPrefix + data.url + "42");
-    //           var uri = monaco.Uri.parse(key);
-               
-    //           return { uri: uri, range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 } };
-    //       });
-    //   } 
-    //});
-
-    //monaco.languages.registerReferenceProvider('csharp', {
-    //    provideDefinition: function (model, position) {
-    //        var offset = model.getOffsetAt(position);
-    //        var url = codexWebRootPrefix + "/definitionAtPosition/" + encodeURI(project) + "/?filename=" + encodeURIComponent(file) + "&position=" + encodeURIComponent(offset);
-    //        return callServer(url, function (data) {
-    //            var key = project + "/" + file;
-    //            //var uri = monaco.Uri.parse(codexWebRootPrefix + data.url + "42");
-    //            var uri = monaco.Uri.parse(key);
-
-    //            return { uri: uri, range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 } };
-    //        });
-    //    }
-    //});
 }
 
-function getSymbolAtPosition(editor: monaco.editor.IEditor, position?: monaco.IPosition): SymbolSpan {
-    position = position || editor.getPosition();
+function debugDisplayPosition(editor: monaco.editor.IStandaloneCodeEditor) {
+    let contentNode = document.createElement('div');
+    contentNode.innerHTML = 'My content widget';
+    contentNode.style.background = 'grey';
+    contentNode.style.top = '50px';
+    var contentWidget: monaco.editor.IOverlayWidget = {
+        getId: function () {
+            return 'my.content.widget';
+        },
+        getDomNode: function () {
+            return contentNode;
+        },
+        getPosition: function () {
+            return null;
+        }
+    };
 
-    let offset = state.currentTextModel.getOffsetAt(position);
+    // TODO: Add official current line info widget
+    //state.editor.addOverlayWidget(contentWidget);
 
-    return getDefinition(state.sourceFileModel, offset) || getReference(state.sourceFileModel, offset);
+    editor.onMouseDown(function (e) {
+        contentNode.innerHTML = "Position: " + state.editor.getModel().getOffsetAt(e.target.position);
+    });
 }
 
-function getReferencesHtmlAtPosition(editor: monaco.editor.IEditor) : Promise<string> {
-    let definition = getSymbolAtPosition(editor);
-    if (!definition) {
-        return Promise.resolve(undefined);
-    }
+function registerEditorActions(editor: monaco.editor.IStandaloneCodeEditor) {
+    editor.addAction({
+        // An unique identifier of the contributed action.
+        id: 'Codex.FindAllReferences.LeftPane',
 
-    return getFindAllReferencesHtml(definition.projectId, definition.symbol);
+        // A label of the action that will be presented to the user.
+        label: 'Find All References (Advanced)',
+
+        // An optional array of keybindings for the action.
+        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.F10],
+
+        // A precondition for this action.
+        precondition: null,
+
+        // A rule to evaluate on top of the precondition in order to dispatch the keybindings.
+        keybindingContext: null,
+
+        contextMenuGroupId: 'navigation',
+
+        contextMenuOrder: 1.5,
+
+        // Method that will be executed when the action is triggered.
+        // @param editor The editor instance is passed in as a convinience
+        run: function (ed) {
+            let referencesHtml = getReferencesHtmlAtPosition(ed)
+                .then(html => {
+                    if (html) {
+                        updateReferences(html);
+                    }
+                },
+                e => { }
+                );
+        }
+    });
 }
 
-function getTargetAtPosition(editor: monaco.editor.IEditor): Promise<DefinitionLocation> {
-    let position = editor.getPosition();
+function registerCtrlClickBehaviour(editor: monaco.editor.IStandaloneCodeEditor) {
+    editor.onMouseDown(e => {
+        if (e.event.ctrlKey) {
+            var target = getTargetAtPosition(state.editor).then(definitionLocation => {
+                openEditorForLocation(definitionLocation);
+            },
+                e => { });
+        }
+    });
 
-    let offset = state.currentTextModel.getOffsetAt(position);
+    editor.onMouseMove(e => {
+        if (e.event.ctrlKey) {
+            let symbol = getSymbolAtPosition(state.editor, e.target.position);
+            if (symbol) {
+                let start = state.editor.getModel().getPositionAt(symbol.span.position);
+                let end = state.editor.getModel().getPositionAt(symbol.span.position + symbol.span.length);
 
-    let definition = getDefinition(state.sourceFileModel, offset);
-
-    if (definition) {
-        return getFindAllReferencesHtml(definition.projectId, definition.symbol);
-    }
-
-    let reference = getReference(state.sourceFileModel, offset);
-    if (reference) {
-        return getDefinitionLocation(reference.projectId, reference.symbol);
-    }
-
-    return Promise.resolve(undefined);
-}
-
-//function openEditor(input) {
-//    alert(input.resource);
-//    var uri = input.resource;
-//    return callServer(uri, function(data) {
-//        state.editor.setValue(data.contents);
-//    });
-//}
-
-async function openEditor(input: { resource: SymbolicUri }) {
-    let definitionLocation = await getDefinitionLocation(input.resource.projectId, input.resource.symbol);
-    return openEditorForLocation(definitionLocation);
-}
-
-async function openEditorForLocation(definitionLocation: DefinitionLocation) {
-    if (typeof definitionLocation === "string") {
-        await updateReferences(definitionLocation);
-    } else {
-        var model = createModelFrom(
-            definitionLocation.contents,
-            definitionLocation.projectId,
-            definitionLocation.filePath);
-        state.sourceFileModel = definitionLocation;
-
-        state.editor.setModel(model);
-
-        // TODO: add try/catch, refactor the logic out
-        state.editor.focus();
-        if (definitionLocation.span) {
-            var monacoPosition = state.currentTextModel.getPositionAt(definitionLocation.span.position);
-
-            var position = { lineNumber: monacoPosition.lineNumber, column: monacoPosition.column };
-            state.editor.revealPositionInCenter(position);
-            state.editor.setPosition(position);
-            state.editor.deltaDecorations([],
-                [
+                state.ctrlClickLinkDecorations = state.editor.deltaDecorations(state.ctrlClickLinkDecorations || [], [
                     {
-                        range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
-                        options: { className: 'highlightLine', isWholeLine: true }
-                    }
-                ]);
-            state.editor.setSelection({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column + definitionLocation.span.length });
+                        range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
+                        options: { inlineClassName: 'blueLink' }
+                    }]);
+                return;
+            }
         }
-    }
 
-    return monaco.Promise.as(null);
-}
-
-var models;
-//var models = {
-
-//};
-
-function createModelFrom(content: string, project: string, file: string) {
-    if (state.currentTextModel) {
-        state.currentTextModel.dispose();
-    }
-
-    var key = `${project}/${file}`;
-    state.currentTextModel = monaco.editor.createModel(content, 'cdx', monaco.Uri.parse(key));
-    return state.currentTextModel;
-}
-
-function createMonacoEditorAndDisplayFileContent(project: string, file: string, sourceFile: SourceFileContentsModel, lineNumber: number) {
-    state.editor = undefined;
-    state.sourceFileModel = sourceFile;
-    if (!state.editor) {
-        require.config({ paths: { 'vs': 'node_modules/monaco-editor/dev/vs' } });
-
-        var editorPane = document.getElementById('editorPane');
-        if (editorPane) {
-            require(['vs/editor/editor.main'],
-                function () {
-                    class SymbolicUri extends monaco.Uri {
-                        projectId: string;
-                        symbol: string;
-                    } 
-
-                    registerProviders();
-
-                    state.currentTextModel = createModelFrom(state.sourceFileModel.contents, project, file);
-
-                    state.editor = monaco.editor.create(editorPane, {
-                        // Don't need to specify a language, because model carries this information around.
-                        model: state.currentTextModel,
-                        readOnly: true,
-                        theme: 'codex',
-                        lineNumbers: "on",
-                        scrollBeyondLastLine: true
-                        }, {
-                            editorService: { openEditor: openEditor },
-                            
-                            //textModelService: { createModelReference: createModelReference }
-                        }
-                    );
-
-                    state.editor.onMouseDown(e => {
-                        if (e.event.ctrlKey) {
-                            var target = getTargetAtPosition(state.editor).then(definitionLocation => {
-                                openEditorForLocation(definitionLocation);
-                            },
-                            e => { });
-                        }
-                    });
-
-                    state.editor.onMouseMove(e => {
-                        if (e.event.ctrlKey) {
-                            let symbol = getSymbolAtPosition(state.editor, e.target.position);
-                            if (symbol) {
-                                let start = state.editor.getModel().getPositionAt(symbol.span.position);
-                                let end = state.editor.getModel().getPositionAt(symbol.span.position + symbol.span.length);
-
-                                state.ctrlClickLinkDecorations = state.editor.deltaDecorations(state.ctrlClickLinkDecorations || [], [
-                                    {
-                                        range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
-                                        options: { inlineClassName: 'blueLink' }
-                                    }]);
-                                return;
-                            }
-                        }
-
-                        if (state.ctrlClickLinkDecorations) {
-                            state.ctrlClickLinkDecorations = state.editor.deltaDecorations(state.ctrlClickLinkDecorations || [], []);
-                        }
-                    });
-
-                    state.editor.addAction({
-                        // An unique identifier of the contributed action.
-                        id: 'Codex.FindAllReferences.LeftPane',
-
-                        // A label of the action that will be presented to the user.
-                        label: 'Find All References (Advanced)',
-
-                        // An optional array of keybindings for the action.
-                        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.F10],
-
-                        // A precondition for this action.
-                        precondition: null,
-
-                        // A rule to evaluate on top of the precondition in order to dispatch the keybindings.
-                        keybindingContext: null,
-
-                        contextMenuGroupId: 'navigation',
-
-                        contextMenuOrder: 1.5,
-
-                        // Method that will be executed when the action is triggered.
-                        // @param editor The editor instance is passed in as a convinience
-                        run: function (ed) {
-                            //let referencesHtml = getFindAllReferencesHtml()
-                            let referencesHtml = getReferencesHtmlAtPosition(ed)
-                                .then(html => {
-                                    if (html) {
-                                        updateReferences(html);
-                                    }
-                                },
-                                e => { }
-                            );
-                        }
-                    });
-
-                    let contentNode = document.createElement('div');
-                    contentNode.innerHTML = 'My content widget';
-                    contentNode.style.background = 'grey';
-                    contentNode.style.top = '50px';
-                    var contentWidget: monaco.editor.IOverlayWidget = {
-                        getId: function () {
-                            return 'my.content.widget';
-                        },
-                        getDomNode: function () {
-                            return contentNode;
-                        },
-                        getPosition: function () {
-                            return null;
-                        }
-                    };
-
-                    // TODO: Add official current line info widget
-                    //state.editor.addOverlayWidget(contentWidget);
-
-                    state.editor.onMouseDown(function (e) {
-                        contentNode.innerHTML = "Position: " + state.editor.getModel().getOffsetAt(e.target.position);
-                    });
-                    
-                    state.editor.focus();
-                    let position;
-                    let length = 0;
-                    if (sourceFile.span) {
-                        position = state.currentTextModel.getPositionAt(sourceFile.span.position);
-                        length = sourceFile.span.length;
-                    } else if (lineNumber) {
-                        position = { lineNumber: lineNumber, column: 1 }
-                    }
-
-                    if (position) {
-                        state.editor.revealPositionInCenter(position);
-                        state.editor.setPosition(position);
-                        state.editor.deltaDecorations([],
-                            [
-                                {
-                                    range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
-                                    options: { className: 'highlightLine', isWholeLine: true }
-                                }
-                            ]);
-
-                        state.editor.setSelection({
-                            startLineNumber: position.lineNumber,
-                            startColumn: position.column,
-                            endLineNumber: position.lineNumber,
-                            endColumn: position.column + length
-                        });
-                    }                    
-            });
+        if (state.ctrlClickLinkDecorations) {
+            state.ctrlClickLinkDecorations = state.editor.deltaDecorations(state.ctrlClickLinkDecorations || [], []);
         }
-    }
+    });
+
 }

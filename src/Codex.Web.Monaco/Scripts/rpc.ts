@@ -92,36 +92,12 @@ function getFindAllReferencesHtml(projectId: string, symbolId: string, projectSc
     return serverWithPrefix<string>(url);
 }
 
-function getDefinitionLocation(projectId: string, symbol: string): Promise<DefinitionLocation> {
+function getDefinitionLocation(projectId: string, symbol: string): Promise<SourceFileOrView> {
     let url = `/definitionscontents/${encodeURI(projectId)}/?symbolId=${encodeURI(symbol)}`;
-    return serverWithPrefix<DefinitionLocation>(url);
+    return serverWithPrefix<SourceFileOrView>(url);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+function getToolTip(projectId: string, symbol: string): Promise<ToolTip> {
+    let url = `/tooltip/${encodeURI(projectId)}/?symbolId=${encodeURI(symbol)}`;
+    return serverWithPrefix<ToolTip>(url);
+}

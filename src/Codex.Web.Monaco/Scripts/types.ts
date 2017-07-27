@@ -42,4 +42,18 @@ interface SymbolInformation {
     span: Span;
 }
 
-type DefinitionLocation = string | SourceFileContentsModel;
+type SourceFileOrView = string | SourceFileContentsModel;
+
+interface ToolTip {
+    projectId: string;
+    fullName: string;
+    comment: string;
+    symbolKind: string;
+    typeName: string;
+}
+
+function generateHtmlFrom(toolTip: ToolTip) {
+    return `projectId: ${toolTip.projectId}\r\n` +
+        `fullName: ${toolTip.fullName}\r\n` +
+        `comment: ${toolTip.comment}`;
+}
