@@ -53,7 +53,7 @@ function createMonacoEditorAndDisplayFileContent(project: string, file: string, 
                         model: state.currentTextModel,
                         readOnly: true,
                         theme: 'codex',
-                        lineNumbers: "on",
+                        lineNumbers: lineNumberProvider,
                         scrollBeyondLastLine: true
                     }, { editorService: { openEditor: openEditor } });
 
@@ -75,6 +75,12 @@ function createMonacoEditorAndDisplayFileContent(project: string, file: string, 
         state.currentTextModel = createModelFrom(state.sourceFileModel.contents, project, file);
         state.editor.setModel(state.currentTextModel);
     }
+}
+
+// Transforms lineNumber into a hyperlink
+function lineNumberProvider(lineNumber: number) {
+    var url = getUrlForState(state.currentState) + "&line=" + lineNumber;
+    return "<a href='" + url + "'>" + lineNumber + "</a>";
 }
 
 function changeEditorPositionTo(editor: monaco.editor.IStandaloneCodeEditor, span: Span, lineNumber: number) {
