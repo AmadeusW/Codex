@@ -60,6 +60,7 @@ function createMonacoEditorAndDisplayFileContent(project: string, file: string, 
                     // Ctrl + click goes to the symbol or to the references of the symbol
                     registerCtrlClickBehaviour(state.editor);
                     registerEditorActions(state.editor);
+                    registerFocusSearchBox(state.editor);
 
                     // For debugging purposes only.
                     debugDisplayPosition(state.editor);
@@ -463,6 +464,35 @@ function registerEditorActions(editor: monaco.editor.IStandaloneCodeEditor) {
                 },
                 e => { }
                 );
+        }
+    });
+}
+
+function registerFocusSearchBox(editor: monaco.editor.IStandaloneCodeEditor) {
+    editor.addAction({
+        // An unique identifier of the contributed action.
+        id: 'Codex.SearchBox.SetFocus',
+
+        // A label of the action that will be presented to the user.
+        label: 'Set focus on the search box',
+
+        // An optional array of keybindings for the action.
+        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.US_COMMA],
+
+        // A precondition for this action.
+        precondition: null,
+
+        // A rule to evaluate on top of the precondition in order to dispatch the keybindings.
+        keybindingContext: null,
+
+        contextMenuGroupId: 'navigation',
+
+        contextMenuOrder: 9,
+
+        // Method that will be executed when the action is triggered.
+        // @param editor The editor instance is passed in as a convinience
+        run: function (ed) {
+            state.searchBox.focus();
         }
     });
 }
