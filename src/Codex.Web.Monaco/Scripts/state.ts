@@ -18,6 +18,9 @@ namespace state {
     export let lastQuery: string = null;
     export let searchTimerID: number = -1;
 
+    export let keyboardSelectedResultGroup : any = null;
+    export let keyboardSelectedResult : any = null;
+    export let keyboardSelectedUIElement : any = null;
 }
 
 type RightPaneContent = 'file' | 'line' | 'symbol' | 'overview' | 'about';
