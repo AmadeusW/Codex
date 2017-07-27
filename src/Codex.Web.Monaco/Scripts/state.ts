@@ -7,7 +7,7 @@ namespace state {
     export let editor: monaco.editor.IStandaloneCodeEditor;
     export let editorRegistered: boolean;
     export let sourceFileModel: SourceFileContentsModel;
-    export let currentTextModel;
+    export let currentTextModel: monaco.editor.IModel;
     
     export let currentState: CodexWebState;
     export let searchBox: any;

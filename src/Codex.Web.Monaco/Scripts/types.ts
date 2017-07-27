@@ -16,6 +16,10 @@ interface SegmentModel {
     references: SymbolSpan[];
 }
 
+interface ClassificationSpan extends Span {
+    name: string;
+}
+
 interface SourceFileContentsModel {
     filePath: string;
     webLink: string;
@@ -25,6 +29,7 @@ interface SourceFileContentsModel {
     contents: string;
     span: Span;
     segments: SegmentModel[];
+    classifications: ClassificationSpan[];
     documentSymbols: SymbolInformation[];
     // Width int characters of segments
     segmentLength: number;

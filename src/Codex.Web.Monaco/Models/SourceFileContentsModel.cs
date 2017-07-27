@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using Codex.ObjectModel;
+using WebUI.Rendering;
 
 namespace Codex.Web.Monaco.Models
 {
@@ -11,6 +12,11 @@ namespace Codex.Web.Monaco.Models
     {
         public int position { get; set; }
         public int length { get; set; }
+    }
+
+    public class ClassificationSpan : Span
+    {
+        public string name { get; set; }
     }
 
     public class ResultModel
@@ -51,6 +57,7 @@ namespace Codex.Web.Monaco.Models
         public string repoRelativePath { get; set; }
         public string webLink { get; set; }
 
+        public List<ClassificationSpan> classifications { get; set; } = new List<ClassificationSpan>();
         public List<SymbolInformation> documentSymbols { get; set; } = new List<SymbolInformation>();
         public List<SegmentModel> segments { get; set; } = new List<SegmentModel>();
 
@@ -65,6 +72,16 @@ namespace Codex.Web.Monaco.Models
             segmentLength = contents.Length;
             var segment = new SegmentModel();
             segments.Add(segment);
+
+            classifications.AddRange(boundSourceFile.ClassificationSpans.Select(classification =>
+            {
+                return new ClassificationSpan()
+                {
+                    name = SourceFileRenderer.MapClassificationToCssClass(classification.Classification),
+                    position = classification.Start,
+                    length = classification.Length
+                };
+            }).Where(span => !string.IsNullOrEmpty(span.name)));
 
             documentSymbols.AddRange(boundSourceFile.Definitions.Select(definition =>
             {

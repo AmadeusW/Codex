@@ -18,9 +18,9 @@ function registerProviders() {
 
     state.editorRegistered = true;
 
-    monaco.languages.register({ id: 'csharp' });
+    monaco.languages.register({ id: 'cdx' });
 
-    monaco.languages.registerDocumentSymbolProvider('csharp', {
+    monaco.languages.registerDocumentSymbolProvider('cdx', {
         provideDocumentSymbols: function (model) {
             let result = state.sourceFileModel.documentSymbols.map(d => {
 
@@ -42,7 +42,27 @@ function registerProviders() {
         }
     });
 
-    monaco.languages.registerDefinitionProvider('csharp', {
+    class CustomState implements monaco.languages.IState {
+        line: number;
+        classificationIndex: number;
+
+        constructor(line: number, classificationIndex: number) {
+            this.line = line;
+            this.classificationIndex = classificationIndex;
+        }
+
+        clone(): monaco.languages.IState {
+             return new CustomState(this.line, this.classificationIndex);
+        }
+
+        equals(other: monaco.languages.IState): boolean {
+            let otherState = <CustomState>other;
+            return otherState.line === this.line && otherState.classificationIndex === this.classificationIndex;
+        }
+
+    }
+
+    monaco.languages.registerDefinitionProvider('cdx', {
         provideDefinition: function (model, position) {
             let offset = model.getOffsetAt(position);
             let reference = getReference(state.sourceFileModel, offset);
@@ -57,7 +77,7 @@ function registerProviders() {
         }
     });
 
-    monaco.languages.registerReferenceProvider('csharp', {
+    monaco.languages.registerReferenceProvider('cdx', {
         provideReferences: function (model, position) {
             var word = model.getWordAtPosition(position);
             if (word && word.word === "B") {
@@ -66,6 +86,131 @@ function registerProviders() {
             return [];
         }
     });
+
+    
+    monaco.languages.setTokensProvider('cdx', {
+        getInitialState: () => new CustomState(1, 0),
+        tokenize: (line, tokenizerState: CustomState) => {
+            let tokens: Array<monaco.languages.IToken> = [];
+
+            let startPosition = state.currentTextModel.getOffsetAt({ lineNumber: tokenizerState.line, column: 1 });
+            let endPosition = state.currentTextModel.getOffsetAt({
+                lineNumber: tokenizerState.line,
+                column: state.currentTextModel.getLineMaxColumn(tokenizerState.line)
+            });
+
+            let classifications = state.sourceFileModel.classifications;
+            let classificationIndex = tokenizerState.classificationIndex;
+
+            if (classifications) {
+                let tokenIndex = 0;
+                let lastPosition = startPosition;
+                for (let i = tokenizerState.classificationIndex; i < classifications.length; i++) {
+                    let classification = classifications[i];
+                    let start = Math.max(startPosition, classification.position);
+                    let end = Math.min(classification.position + classification.length, endPosition);
+
+                    
+
+                    if (end < startPosition) {
+                        classificationIndex++;
+                    } else if (classification.position <= endPosition) {
+                        if (lastPosition < start) {
+                            tokens[tokenIndex] = {
+                                scopes: '',
+                                startIndex: lastPosition - startPosition
+                            };
+
+                            tokenIndex++;
+                        }
+
+                        lastPosition = end;
+                        if (lastPosition < endPosition) {
+                            classificationIndex++;
+                        }
+
+                        tokens[tokenIndex] = {
+                            scopes: 'cdx.' + classification.name,
+                            startIndex: start - startPosition
+                        };
+                        tokenIndex++;
+                    } else {
+                        break;
+                    }
+                }
+
+                if (lastPosition < endPosition) {
+                    tokens[tokenIndex] = {
+                        scopes: '',
+                        startIndex: lastPosition - startPosition
+                    };
+                }
+            }
+
+
+            return {
+                tokens: tokens,
+                endState: new CustomState(tokenizerState.line + 1, classificationIndex)
+            };
+        }
+    });
+    
+    monaco.editor.defineTheme('codex', {
+        base: 'vs',
+        inherit: true,
+        rules: [
+            // keyword
+            { token: 'cdx.k', foreground: '0000ff' },
+            // type
+            { token: 'cdx.t', foreground: '2b91af' },
+            // comment
+            { token: 'cdx.c', foreground: '008000' },
+            // string literal
+            { token: 'cdx.s', foreground: 'a31515' },
+            // xml delimiter
+            { token: 'cdx.xd', foreground: '0000ff' },
+            // xml name
+            { token: 'cdx.xn', foreground: 'A31515' },
+            // xml name
+            { token: 'cdx.xn', foreground: 'A31515' },
+            // xml attribute name
+            { token: 'cdx.xan', foreground: 'ff0000' },
+            // xml attribute value
+            { token: 'cdx.xav', foreground: '0000ff' },
+            // xml entity reference
+            { token: 'cdx.xer', foreground: 'ff0000' },
+            // xml CDATA section
+            { token: 'cdx.xcs', foreground: '808080' },
+            // xml literal delimeter
+            { token: 'cdx.xld', foreground: '6464B9' },
+            // xml processing instruction
+            { token: 'cdx.xpi', foreground: '808080' },
+            // xml literal name
+            { token: 'cdx.xln', foreground: '844646' },
+            // xml literal attribute name
+            { token: 'cdx.xlan', foreground: 'B96464' },
+            // xml literal attribute value
+            { token: 'cdx.xlav', foreground: '6464B9' },
+            // xml literal attribute quotes
+            { token: 'cdx.xlaq', foreground: '555555' },
+            // xml literal CDATA section
+            { token: 'cdx.xlcs', foreground: 'C0C0C0' },
+            // xml literal entity reference
+            { token: 'cdx.xler', foreground: 'B96464' },
+            // xml literal embedded expression name
+            { token: 'cdx.xlee', foreground: 'B96464', background: 'FFFEBF' },
+            // xml literal processing instruction
+            { token: 'cdx.xlpi', foreground: 'C0C0C0' },
+            // excluded code
+            { token: 'cdx.e', foreground: '808080' }
+        ],
+        colors: {}
+    });
+    /*
+    */
+
+
+
     //monaco.languages.register({ id: 'csharp' });
     //monaco.languages.registerDefinitionProvider('csharp', {
     //    provideDefinition: function (model, position) {
@@ -164,7 +309,7 @@ function createModelFrom(content: string, project: string, file: string) {
     }
 
     var key = `${project}/${file}`;
-    state.currentTextModel = monaco.editor.createModel(content, 'csharp', monaco.Uri.parse(key));
+    state.currentTextModel = monaco.editor.createModel(content, 'cdx', monaco.Uri.parse(key));
     return state.currentTextModel;
 }
 
@@ -191,10 +336,12 @@ function createMonacoEditorAndDisplayFileContent(project: string, file: string, 
                         // Don't need to specify a language, because model carries this information around.
                         model: state.currentTextModel,
                         readOnly: true,
+                        theme: 'codex',
                         lineNumbers: "on",
                         scrollBeyondLastLine: true
                         }, {
                             editorService: { openEditor: openEditor },
+                            
                             //textModelService: { createModelReference: createModelReference }
                         }
                     );
@@ -232,6 +379,29 @@ function createMonacoEditorAndDisplayFileContent(project: string, file: string, 
                                 e => { }
                             );
                         }
+                    });
+
+                    let contentNode = document.createElement('div');
+                    contentNode.innerHTML = 'My content widget';
+                    contentNode.style.background = 'grey';
+                    contentNode.style.top = '50px';
+                    var contentWidget: monaco.editor.IOverlayWidget = {
+                        getId: function () {
+                            return 'my.content.widget';
+                        },
+                        getDomNode: function () {
+                            return contentNode;
+                        },
+                        getPosition: function () {
+                            return null;
+                        }
+                    };
+
+                    // TODO: Add official current line info widget
+                    //state.editor.addOverlayWidget(contentWidget);
+
+                    state.editor.onMouseDown(function (e) {
+                        contentNode.innerHTML = "Position: " + state.editor.getModel().getOffsetAt(e.target.position);
                     });
                     
                     state.editor.focus();
