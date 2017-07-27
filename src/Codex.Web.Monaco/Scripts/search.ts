@@ -43,7 +43,7 @@ function ensureSearchBox() {
 
     state.searchBox.focus();
 
-    state.searchBox.onkeyup = function () {
+    state.searchBox.onkeyup = function (event) {
         if (event && (<any>event).keyCode == 13) {
             state.lastSearchString = "";
             onSearchChange();
