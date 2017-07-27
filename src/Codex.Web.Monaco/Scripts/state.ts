@@ -12,8 +12,12 @@ namespace state {
     
     export let currentState: CodexWebState;
     export let searchBox: any;
-    export let lastSearchString;
+    export let lastSearchString: any;
     export let selectedFile;
+
+    export let lastQuery: string = null;
+    export let searchTimerID: number = -1;
+
 }
 
 type RightPaneContent = 'file' | 'line' | 'symbol' | 'overview' | 'about';

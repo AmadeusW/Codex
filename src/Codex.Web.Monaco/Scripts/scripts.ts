@@ -3,9 +3,7 @@
 /// <reference path="rpc.ts"/>
 /// <reference path="editor.ts"/>
 /// <reference path="state.ts"/>
-
-// For type safety reasons. The function defined in another js file right now.
-declare function LoadSearchCore(searchText);
+/// <reference path="search.ts" />
 
 function ReplaceCurrentState() {
     history.replaceState(state.currentState, state.currentState.windowTitle, getUrlForState(state.currentState));

@@ -443,8 +443,8 @@
     <Content Include="ScriptsExternal\jquery-1.10.2.min.js" />
     <Content Include="ScriptsExternal\jquery-1.10.2.min.map" />
     <Content Include="ScriptsExternal\modernizr-2.6.2.js" />
-    <Content Include="Scripts\respond.js" />
-    <Content Include="Scripts\respond.min.js" />
+    <Content Include="ScriptsExternal\respond.js" />
+    <Content Include="ScriptsExternal\respond.min.js" />
     <Content Include="Scripts\tsconfig.json" />
     <TypeScriptCompile Include="node_modules\%40types\jquery\index.d.ts" />
     <TypeScriptCompile Include="Scripts\types.ts" />
@@ -452,8 +452,8 @@
     <TypeScriptCompile Include="Scripts\rpc.ts" />
     <TypeScriptCompile Include="Scripts\editor.ts" />
     <TypeScriptCompile Include="Scripts\scripts.ts" />
-    <Content Include="Scripts\search.js" />
-    <Content Include="Scripts\split.js" />
+    <TypeScriptCompile Include="Scripts\search.ts" />
+    <Content Include="ScriptsExternal\split.js" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\About\About.cshtml" />
     <Content Include="Views\Home\Contact.cshtml" />
