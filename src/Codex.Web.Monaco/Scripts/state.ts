@@ -8,6 +8,7 @@ namespace state {
     export let editorRegistered: boolean;
     export let sourceFileModel: SourceFileContentsModel;
     export let currentTextModel: monaco.editor.IModel;
+    export let ctrlClickLinkDecorations: string[];
     
     export let currentState: CodexWebState;
     export let searchBox: any;

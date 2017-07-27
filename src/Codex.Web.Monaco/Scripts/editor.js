@@ -242,14 +242,30 @@ function registerProviders() {
     //    }
     //});
 }
-function getReferencesHtmlAtPosition(editor) {
-    var position = editor.getPosition();
+function getSymbolAtPosition(editor, position) {
+    position = position || editor.getPosition();
     var offset = state.currentTextModel.getOffsetAt(position);
-    var definition = getDefinition(state.sourceFileModel, offset) || getReference(state.sourceFileModel, offset);
+    return getDefinition(state.sourceFileModel, offset) || getReference(state.sourceFileModel, offset);
+}
+function getReferencesHtmlAtPosition(editor) {
+    var definition = getSymbolAtPosition(editor);
     if (!definition) {
         return Promise.resolve(undefined);
     }
     return getFindAllReferencesHtml(definition.projectId, definition.symbol);
+}
+function getTargetAtPosition(editor) {
+    var position = editor.getPosition();
+    var offset = state.currentTextModel.getOffsetAt(position);
+    var definition = getDefinition(state.sourceFileModel, offset);
+    if (definition) {
+        return getFindAllReferencesHtml(definition.projectId, definition.symbol);
+    }
+    var reference = getReference(state.sourceFileModel, offset);
+    if (reference) {
+        return getDefinitionLocation(reference.projectId, reference.symbol);
+    }
+    return Promise.resolve(undefined);
 }
 //function openEditor(input) {
 //    alert(input.resource);
@@ -260,35 +276,49 @@ function getReferencesHtmlAtPosition(editor) {
 //}
 function openEditor(input) {
     return __awaiter(this, void 0, void 0, function () {
-        var definitionLocation, model, monacoPosition, position;
+        var definitionLocation;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, getDefinitionLocation(input.resource.projectId, input.resource.symbol)];
                 case 1:
                     definitionLocation = _a.sent();
-                    if (typeof definitionLocation === "string") {
+                    return [2 /*return*/, openEditorForLocation(definitionLocation)];
+            }
+        });
+    });
+}
+function openEditorForLocation(definitionLocation) {
+    return __awaiter(this, void 0, void 0, function () {
+        var model, monacoPosition, position;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (!(typeof definitionLocation === "string")) return [3 /*break*/, 2];
+                    return [4 /*yield*/, updateReferences(definitionLocation)];
+                case 1:
+                    _a.sent();
+                    return [3 /*break*/, 3];
+                case 2:
+                    model = createModelFrom(definitionLocation.contents, definitionLocation.projectId, definitionLocation.filePath);
+                    state.sourceFileModel = definitionLocation;
+                    state.editor.setModel(model);
+                    // TODO: add try/catch, refactor the logic out
+                    state.editor.focus();
+                    if (definitionLocation.span) {
+                        monacoPosition = state.currentTextModel.getPositionAt(definitionLocation.span.position);
+                        position = { lineNumber: monacoPosition.lineNumber, column: monacoPosition.column };
+                        state.editor.revealPositionInCenter(position);
+                        state.editor.setPosition(position);
+                        state.editor.deltaDecorations([], [
+                            {
+                                range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
+                                options: { className: 'highlightLine', isWholeLine: true }
+                            }
+                        ]);
+                        state.editor.setSelection({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column + definitionLocation.span.length });
                     }
-                    else {
-                        model = createModelFrom(definitionLocation.contents, definitionLocation.projectId, definitionLocation.filePath);
-                        state.sourceFileModel = definitionLocation;
-                        state.editor.setModel(model);
-                        // TODO: add try/catch, refactor the logic out
-                        state.editor.focus();
-                        if (definitionLocation.span) {
-                            monacoPosition = state.currentTextModel.getPositionAt(definitionLocation.span.position);
-                            position = { lineNumber: monacoPosition.lineNumber, column: monacoPosition.column };
-                            state.editor.revealPositionInCenter(position);
-                            state.editor.setPosition(position);
-                            state.editor.deltaDecorations([], [
-                                {
-                                    range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
-                                    options: { className: 'highlightLine', isWholeLine: true }
-                                }
-                            ]);
-                            state.editor.setSelection({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column + definitionLocation.span.length });
-                        }
-                    }
-                    return [2 /*return*/, monaco.Promise.as(null)];
+                    _a.label = 3;
+                case 3: return [2 /*return*/, monaco.Promise.as(null)];
             }
         });
     });
@@ -331,6 +361,32 @@ function createMonacoEditorAndDisplayFileContent(project, file, sourceFile, line
                 }, {
                     editorService: { openEditor: openEditor },
                 });
+                state.editor.onMouseDown(function (e) {
+                    if (e.event.ctrlKey) {
+                        var target = getTargetAtPosition(state.editor).then(function (definitionLocation) {
+                            openEditorForLocation(definitionLocation);
+                        }, function (e) { });
+                    }
+                });
+                state.editor.onMouseMove(function (e) {
+                    if (e.event.ctrlKey) {
+                        var symbol = getSymbolAtPosition(state.editor, e.target.position);
+                        if (symbol) {
+                            var start = state.editor.getModel().getPositionAt(symbol.span.position);
+                            var end = state.editor.getModel().getPositionAt(symbol.span.position + symbol.span.length);
+                            state.ctrlClickLinkDecorations = state.editor.deltaDecorations(state.ctrlClickLinkDecorations || [], [
+                                {
+                                    range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
+                                    options: { inlineClassName: 'blueLink' }
+                                }
+                            ]);
+                            return;
+                        }
+                    }
+                    if (state.ctrlClickLinkDecorations) {
+                        state.ctrlClickLinkDecorations = state.editor.deltaDecorations(state.ctrlClickLinkDecorations || [], []);
+                    }
+                });
                 state.editor.addAction({
                     // An unique identifier of the contributed action.
                     id: 'Codex.FindAllReferences.LeftPane',
@@ -371,7 +427,8 @@ function createMonacoEditorAndDisplayFileContent(project, file, sourceFile, line
                         return null;
                     }
                 };
-                state.editor.addOverlayWidget(contentWidget);
+                // TODO: Add official current line info widget
+                //state.editor.addOverlayWidget(contentWidget);
                 state.editor.onMouseDown(function (e) {
                     contentNode.innerHTML = "Position: " + state.editor.getModel().getOffsetAt(e.target.position);
                 });

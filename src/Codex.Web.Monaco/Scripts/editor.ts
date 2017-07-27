@@ -241,18 +241,40 @@ function registerProviders() {
     //});
 }
 
-function getReferencesHtmlAtPosition(editor: monaco.editor.IEditor) : Promise<string> {
-    let position = editor.getPosition();
-    
+function getSymbolAtPosition(editor: monaco.editor.IEditor, position?: monaco.IPosition): SymbolSpan {
+    position = position || editor.getPosition();
+
     let offset = state.currentTextModel.getOffsetAt(position);
 
-    let definition = getDefinition(state.sourceFileModel, offset) || getReference(state.sourceFileModel, offset);
+    return getDefinition(state.sourceFileModel, offset) || getReference(state.sourceFileModel, offset);
+}
 
+function getReferencesHtmlAtPosition(editor: monaco.editor.IEditor) : Promise<string> {
+    let definition = getSymbolAtPosition(editor);
     if (!definition) {
         return Promise.resolve(undefined);
     }
 
     return getFindAllReferencesHtml(definition.projectId, definition.symbol);
+}
+
+function getTargetAtPosition(editor: monaco.editor.IEditor): Promise<DefinitionLocation> {
+    let position = editor.getPosition();
+
+    let offset = state.currentTextModel.getOffsetAt(position);
+
+    let definition = getDefinition(state.sourceFileModel, offset);
+
+    if (definition) {
+        return getFindAllReferencesHtml(definition.projectId, definition.symbol);
+    }
+
+    let reference = getReference(state.sourceFileModel, offset);
+    if (reference) {
+        return getDefinitionLocation(reference.projectId, reference.symbol);
+    }
+
+    return Promise.resolve(undefined);
 }
 
 //function openEditor(input) {
@@ -265,8 +287,12 @@ function getReferencesHtmlAtPosition(editor: monaco.editor.IEditor) : Promise<st
 
 async function openEditor(input: { resource: SymbolicUri }) {
     let definitionLocation = await getDefinitionLocation(input.resource.projectId, input.resource.symbol);
-    if (typeof definitionLocation === "string") {
+    return openEditorForLocation(definitionLocation);
+}
 
+async function openEditorForLocation(definitionLocation: DefinitionLocation) {
+    if (typeof definitionLocation === "string") {
+        await updateReferences(definitionLocation);
     } else {
         var model = createModelFrom(
             definitionLocation.contents,
@@ -292,7 +318,7 @@ async function openEditor(input: { resource: SymbolicUri }) {
                     }
                 ]);
             state.editor.setSelection({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: position.lineNumber, endColumn: position.column + definitionLocation.span.length });
-        }                    
+        }
     }
 
     return monaco.Promise.as(null);
@@ -345,6 +371,36 @@ function createMonacoEditorAndDisplayFileContent(project: string, file: string, 
                             //textModelService: { createModelReference: createModelReference }
                         }
                     );
+
+                    state.editor.onMouseDown(e => {
+                        if (e.event.ctrlKey) {
+                            var target = getTargetAtPosition(state.editor).then(definitionLocation => {
+                                openEditorForLocation(definitionLocation);
+                            },
+                            e => { });
+                        }
+                    });
+
+                    state.editor.onMouseMove(e => {
+                        if (e.event.ctrlKey) {
+                            let symbol = getSymbolAtPosition(state.editor, e.target.position);
+                            if (symbol) {
+                                let start = state.editor.getModel().getPositionAt(symbol.span.position);
+                                let end = state.editor.getModel().getPositionAt(symbol.span.position + symbol.span.length);
+
+                                state.ctrlClickLinkDecorations = state.editor.deltaDecorations(state.ctrlClickLinkDecorations || [], [
+                                    {
+                                        range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
+                                        options: { inlineClassName: 'blueLink' }
+                                    }]);
+                                return;
+                            }
+                        }
+
+                        if (state.ctrlClickLinkDecorations) {
+                            state.ctrlClickLinkDecorations = state.editor.deltaDecorations(state.ctrlClickLinkDecorations || [], []);
+                        }
+                    });
 
                     state.editor.addAction({
                         // An unique identifier of the contributed action.
