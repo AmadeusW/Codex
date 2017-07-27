@@ -17,7 +17,7 @@ namespace WebUI
             bundles.Add(new ScriptBundle("~/bundles/header").Include(
                 "~/node_modules/monaco-editor/dev/vs/loader.js",
                 "~/Scripts/search.js",
-                "~/Scripts/split.js",
+                "~/ScriptsExternal/split.js",
                 "~/Scripts/scripts.js",
                 "~/Scripts/rpc.js",
                 "~/Scripts/state.js",
