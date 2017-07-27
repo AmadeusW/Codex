@@ -109,6 +109,7 @@ namespace Codex.Analysis
                 ProjectId = projectId,
                 ReferenceKind = nameof(ReferenceKind.Definition),
                 Kind = nameof(SymbolKinds.File),
+                IsImplicitlyDeclared = true
             };
         }
 
@@ -238,6 +239,7 @@ namespace Codex.Analysis
                         ProjectId = BoundSourceFile.ProjectId,
                         ReferenceKind = nameof(ReferenceKind.Definition),
                         Kind = checksumKey,
+                        IsImplicitlyDeclared = true
                     });
             }
 
