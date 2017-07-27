@@ -491,10 +491,6 @@ function registerFocusSearchBox(editor: monaco.editor.IStandaloneCodeEditor) {
         // A rule to evaluate on top of the precondition in order to dispatch the keybindings.
         keybindingContext: null,
 
-        contextMenuGroupId: 'navigation',
-
-        contextMenuOrder: 9,
-
         // Method that will be executed when the action is triggered.
         // @param editor The editor instance is passed in as a convinience
         run: function (ed) {
