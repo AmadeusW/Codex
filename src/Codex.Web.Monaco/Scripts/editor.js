@@ -53,6 +53,24 @@ function registerProviders() {
     }
     state.editorRegistered = true;
     monaco.languages.register({ id: 'csharp' });
+    monaco.languages.registerDocumentSymbolProvider('csharp', {
+        provideDocumentSymbols: function (model) {
+            var result = state.sourceFileModel.documentSymbols.map(function (d) {
+                var location1 = model.getPositionAt(d.span.position);
+                var location2 = model.getPositionAt(d.span.position + d.span.length);
+                return {
+                    name: d.name,
+                    containerName: d.containerName,
+                    kind: monaco.languages.SymbolKind[d.symbolKind],
+                    location: {
+                        uri: undefined,
+                        range: { startLineNumber: location1.lineNumber, startColumn: location1.column, endLineNumber: location2.lineNumber, endColumn: location2.column }
+                    }
+                };
+            });
+            return result;
+        }
+    });
     monaco.languages.registerDefinitionProvider('csharp', {
         provideDefinition: function (model, position) {
             var offset = model.getOffsetAt(position);

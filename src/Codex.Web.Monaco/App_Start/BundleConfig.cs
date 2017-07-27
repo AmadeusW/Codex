@@ -21,7 +21,8 @@ namespace WebUI
                 "~/Scripts/scripts.js",
                 "~/Scripts/rpc.js",
                 "~/Scripts/state.js",
-                "~/Scripts/editor.js"
+                "~/Scripts/editor.js",
+                "~/Scripts/types.js"
                 ));
 
             // Use the development version of Modernizr to develop with and learn from. Then, when you're

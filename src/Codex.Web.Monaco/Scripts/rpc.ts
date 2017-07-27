@@ -20,35 +20,6 @@ function server<T>(url: string): Promise<T> {
     });
 }
 
-interface Span {
-    position: number;
-    length: number;
-}
-
-interface SymbolSpan {
-    symbol: string;
-    projectId: string;
-    span: Span;
-}
-
-interface SegmentModel {
-    definitions: SymbolSpan[];
-    references: SymbolSpan[];
-}
-
-interface SourceFileContentsModel {
-    filePath: string;
-    webLink: string;
-    repoRelativePath: string;
-    projectId: string;
-
-    contents: string;
-    span: Span;
-    segments: SegmentModel[];
-    // Width int characters of segments
-    segmentLength: number;
-}
-
 function getReference(_this: SourceFileContentsModel, position: number): SymbolSpan {
     let segmentIndex = ~~(position / _this.segmentLength);
     if (segmentIndex >= _this.segments.length) {
@@ -106,8 +77,6 @@ function getDefinitionForSymbol(_this: SourceFileContentsModel, symbolId: string
 
     return undefined;
 }
-
-type DefinitionLocation = string | SourceFileContentsModel;
 
 function getSourceFileContents(projectId: string, filePath: string): Promise<SourceFileContentsModel> {
     let url = `/sourcecontent/${encodeURI(projectId)}/?filename=${encodeURI(filePath)}`;

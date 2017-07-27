@@ -20,6 +20,28 @@ function registerProviders() {
 
     monaco.languages.register({ id: 'csharp' });
 
+    monaco.languages.registerDocumentSymbolProvider('csharp', {
+        provideDocumentSymbols: function (model) {
+            let result = state.sourceFileModel.documentSymbols.map(d => {
+
+                let location1 = model.getPositionAt(d.span.position);
+                let location2 = model.getPositionAt(d.span.position + d.span.length);
+
+                return {
+                    name: d.name,
+                    containerName: d.containerName,
+                    kind: monaco.languages.SymbolKind[d.symbolKind],
+                    location: {
+                        uri: undefined,
+                        range: { startLineNumber: location1.lineNumber, startColumn: location1.column, endLineNumber: location2.lineNumber, endColumn: location2.column }
+                    }
+                }
+            });
+
+            return result;
+        }
+    });
+
     monaco.languages.registerDefinitionProvider('csharp', {
         provideDefinition: function (model, position) {
             let offset = model.getOffsetAt(position);

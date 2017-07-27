@@ -91,7 +91,11 @@ namespace WebUI.Controllers
 
         private async Task<SourceFileContentsModel> GetSourceFileAsync(string projectId, string filename)
         {
-            var boundSourceFile = await Storage.GetBoundSourceFileAsync(this.GetSearchRepos(), projectId, filename);
+            var boundSourceFile = await Storage.GetBoundSourceFileAsync(
+                this.GetSearchRepos(), 
+                projectId, 
+                filename,
+                includeDefinitions: true);
             if (boundSourceFile == null)
             {
                 return null;

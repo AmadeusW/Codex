@@ -33,6 +33,14 @@ namespace Codex.Web.Monaco.Models
         public List<SymbolSpan> references { get; set; } = new List<SymbolSpan>(0);
     }
 
+    public class SymbolInformation
+    {
+        public string name { get; set; }
+        public string containerName { get; set; }
+        public string symbolKind { get; set; }
+        public Span span { get; set; }
+    }
+
     public class SourceFileContentsModel
     {
         public Span span;
@@ -43,6 +51,7 @@ namespace Codex.Web.Monaco.Models
         public string repoRelativePath { get; set; }
         public string webLink { get; set; }
 
+        public List<SymbolInformation> documentSymbols { get; set; } = new List<SymbolInformation>();
         public List<SegmentModel> segments { get; set; } = new List<SegmentModel>();
 
         public int segmentLength { get; set; }
@@ -56,6 +65,21 @@ namespace Codex.Web.Monaco.Models
             segmentLength = contents.Length;
             var segment = new SegmentModel();
             segments.Add(segment);
+
+            documentSymbols.AddRange(boundSourceFile.Definitions.Select(definition =>
+            {
+                return new SymbolInformation()
+                {
+                    name = definition.Definition.ShortName,
+                    containerName = definition.Definition.ContainerQualifiedName,
+                    symbolKind = definition.Definition.Kind,
+                    span = new Span()
+                    {
+                        position = definition.Start,
+                        length = definition.Length
+                    }
+                };
+            }));
 
             foreach (var reference in boundSourceFile.References)
             {
