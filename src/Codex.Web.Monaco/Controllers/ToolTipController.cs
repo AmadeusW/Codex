@@ -29,23 +29,13 @@ namespace WebUI.Controllers
                 var definition = definitionSpan?.Definition;
 
                 Responses.PrepareResponse(Response);
-
-                // Calling back end once again to get 'LineSpanText'.
-                // Not good, but leaving for now.
-                var actualDefinitions =
-                    (await Storage.GetReferencesToSymbolAsync(new Symbol()
-                    {
-                        ProjectId = projectId,
-                        Id = SymbolId.UnsafeCreateWithValue(symbolId),
-                        Kind = nameof(ReferenceKind.Definition)
-                    })).Entries.FirstOrDefault();
-
+                
                 var toolTip =
                     definitionSpan != null
                     ? new ToolTipModel()
                     {
                         comment = definition.Comment,
-                        definitionText = actualDefinitions?.Span.LineSpanText,
+                        definitionText = definition.DeclarationName,
                         fullName = definition.DisplayName,
                         projectId = definition.ProjectId,
                         symbolKind = definition.Kind,

@@ -467,7 +467,7 @@ namespace Codex.Analysis
                 Glyph = symbol.GetGlyph(),
                 SymbolDepth = symbol.GetSymbolDepth(),
                 Comment = symbol.GetDocumentationCommentXml(),
-                ShortDisplayName = symbol.ToDisplayString(),
+                DeclarationName = symbol.ToDeclarationName(),
                 TypeName = GetTypeName(symbol)
             };
 

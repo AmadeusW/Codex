@@ -309,7 +309,7 @@ namespace Codex.ObjectModel
 
         public string TypeName { get; set; }
 
-        public string ShortDisplayName { get; set; }
+        public string DeclarationName { get; set; }
 
         public string DisplayName { get; set; }
         private string shortName;

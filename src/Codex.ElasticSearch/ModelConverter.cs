@@ -293,7 +293,7 @@ namespace Codex.Storage
                 Glyph = symbol.Glyph == Glyph.Unknown ? null : symbol.Glyph.ToString(),
                 SymbolDepth = symbol.SymbolDepth,
                 IsImplicitlyDeclared = symbol.IsImplicitlyDeclared,
-                ShortDisplayName =  symbol.ShortDisplayName,
+                ShortDisplayName =  symbol.DeclarationName,
                 Comment =  symbol.Comment,
                 TypeName = symbol.TypeName
             };
@@ -334,7 +334,7 @@ namespace Codex.Storage
                 Glyph = ParseEnumOrDefault(symbolModel.Glyph, Glyph.Unknown),
                 SymbolDepth = symbolModel.SymbolDepth,
                 IsImplicitlyDeclared = symbolModel.IsImplicitlyDeclared,
-                ShortDisplayName = symbolModel.ShortDisplayName,
+                DeclarationName = symbolModel.ShortDisplayName,
                 Comment = symbolModel.Comment,
                 TypeName = symbolModel.TypeName
             };

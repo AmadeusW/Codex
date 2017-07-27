@@ -230,8 +230,7 @@ function registerEditorProviders() {
 
     monaco.languages.registerHoverProvider(codexLanguage, {
         provideHover: function (model, position) {
-            let offset = model.getOffsetAt(position);
-            let reference = getReference(state.sourceFileModel, offset);
+            let reference = getSymbolAtPosition(state.editor, position);
             let uri = <SymbolicUri>monaco.Uri.parse(`${encodeURI(reference.projectId)}/${encodeURI(reference.symbol)}`);
             uri.projectId = reference.projectId;
             uri.symbol = reference.symbol;
