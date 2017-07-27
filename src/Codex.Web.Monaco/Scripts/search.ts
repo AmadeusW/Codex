@@ -44,9 +44,15 @@ function ensureSearchBox() {
     state.searchBox.focus();
 
     state.searchBox.onkeyup = function (event) {
-        if (event && (<any>event).keyCode == 13) {
-            state.lastSearchString = "";
-            onSearchChange();
+        if (event && (<any>event).keyCode == 13) { // enter
+            if (state.keyboardSelectedResult == null) {
+                // Perform the search if no result is keyboard-selected
+                state.lastSearchString = "";
+                onSearchChange();
+            } else {
+                // If a result is keyboard-selected, navigate to it
+                state.keyboardSelectedUIElement[0].click();
+            }
         }
     };
 
