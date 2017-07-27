@@ -27,19 +27,29 @@ namespace WebUI.Controllers
                 var definitionResult = await (Storage).GetDefinitionsAsync(this.GetSearchRepos(), projectId, symbolId);
                 var definitionSpan = definitionResult?.FirstOrDefault()?.Span;
                 var definition = definitionSpan?.Definition;
-                var symbolName = definition?.ShortName ?? symbolId;
 
                 Responses.PrepareResponse(Response);
+
+                // Calling back end once again to get 'LineSpanText'.
+                // Not good, but leaving for now.
+                var actualDefinitions =
+                    (await Storage.GetReferencesToSymbolAsync(new Symbol()
+                    {
+                        ProjectId = projectId,
+                        Id = SymbolId.UnsafeCreateWithValue(symbolId),
+                        Kind = nameof(ReferenceKind.Definition)
+                    })).Entries.FirstOrDefault();
 
                 var toolTip =
                     definitionSpan != null
                     ? new ToolTipModel()
                     {
-                        comment = "awesome comment",
+                        comment = definition.Comment,
+                        definitionText = actualDefinitions?.Span.LineSpanText,
                         fullName = definition.DisplayName,
                         projectId = definition.ProjectId,
                         symbolKind = definition.Kind,
-                        typeName = definition.ShortName,
+                        typeName = definition.TypeName,
                     }
                     : new ToolTipModel() { };
 

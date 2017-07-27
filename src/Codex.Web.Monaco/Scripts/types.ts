@@ -50,10 +50,52 @@ interface ToolTip {
     comment: string;
     symbolKind: string;
     typeName: string;
+    definitionText: string;
 }
 
-function generateHtmlFrom(toolTip: ToolTip) {
-    return `projectId: ${toolTip.projectId}\r\n` +
-        `fullName: ${toolTip.fullName}\r\n` +
-        `comment: ${toolTip.comment}`;
+function generateToolTipHeader(toolTip: ToolTip): monaco.MarkedString {
+    let value = toolTip.definitionText;
+    // Definitions could have a trailing ','. Removing it.
+    if (value[value.length - 1] === ',') {
+        value = value.substr(0, value.length - 1);
+    }
+
+    return { language: 'csharp', value: value };
+}
+
+function generateToolTipBody(toolTip: ToolTip): monaco.MarkedString[] {
+
+    // This could be a hyperlink.
+    let result: string = `Defined at **${toolTip.projectId}**`;
+
+    if (toolTip.comment) {
+        result += `: *${extractSummaryText(toolTip.comment).trim()}*`;
+    }
+
+    return [result];
+}
+
+const summaryStartTag = /<summary>/i;
+const summaryEndTag = /<\/summary>/i;
+
+function extractSummaryText(xmlDocComment: string): string {
+    if (!xmlDocComment) {
+        return xmlDocComment;
+    }
+
+    let summary = xmlDocComment;
+
+    let startIndex = summary.search(summaryStartTag);
+    if (startIndex < 0) {
+        return summary;
+    }
+
+    summary = summary.slice(startIndex + '<summary>'.length);
+
+    let endIndex = summary.search(summaryEndTag);
+    if (endIndex < 0) {
+        return summary;
+    }
+
+    return summary.slice(0, endIndex);
 }

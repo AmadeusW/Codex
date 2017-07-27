@@ -18,5 +18,7 @@ namespace Codex.Web.Monaco.Models
 
         [JsonProperty(PropertyName = "typeName")]
         public string typeName { get; set; }
+
+        public string definitionText { get; set; }
     }
 }

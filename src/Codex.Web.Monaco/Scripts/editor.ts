@@ -249,8 +249,9 @@ function registerEditorProviders() {
                     return {
                         range: new monaco.Range(left.lineNumber, left.column, right.lineNumber, right.column),
                         contents: [
-                            `**${res.symbolKind} ${res.fullName}**`,
-                            { language: 'html', value: generateHtmlFrom(res) }
+                            generateToolTipHeader(res),
+                            ...generateToolTipBody(res),
+                            //{ language: 'markdown', value: generateToolTipBody(res) }
                         ]
                     }
                 });
