@@ -317,16 +317,16 @@ function displayFile(data, symbolId, lineNumber) {
 
     setRightPane(data);
 
-    var filePath = getFilePath();
-    if (filePath && filePath !== state.currentState.filePath) {
-        state.currentState.filePath = filePath;
-        state.currentState.windowTitle = filePath;
-        ReplaceCurrentState();
-    }
-
-    GoToSymbolOrLineNumber(symbolId, lineNumber);
-
-    addToolbar();
+    //var filePath = getFilePath();
+    //if (filePath && filePath !== state.currentState.filePath) {
+    //    state.currentState.filePath = filePath;
+    //    state.currentState.windowTitle = filePath;
+    //    ReplaceCurrentState();
+    //}
+    //
+    //GoToSymbolOrLineNumber(symbolId, lineNumber);
+    //
+    //addToolbar();
     trackActiveItemInSolutionExplorer();
 }
 

@@ -61,6 +61,7 @@ function createMonacoEditorAndDisplayFileContent(project: string, file: string, 
                     registerCtrlClickBehaviour(state.editor);
                     registerEditorActions(state.editor);
                     registerFocusSearchBox(state.editor);
+                    addToolbarWidget(state.editor);
 
                     // For debugging purposes only.
                     debugDisplayPosition(state.editor);
@@ -204,10 +205,41 @@ function registerEditorProviders() {
         }
     });
 
+    monaco.languages.registerImplementationProvider(codexLanguage, {
+        provideImplementation: function (model, position) {
+            var reference = getSymbolAtPosition(state.editor, position);
+            if (!reference) {
+                return undefined;
+            }
+
+            let uri = <SymbolicUri>monaco.Uri.parse(`${encodeURI(reference.projectId)}/${encodeURI(reference.symbol)}`);
+            uri.projectId = reference.projectId;
+            uri.symbol = reference.symbol;
+
+            let uri2 = <SymbolicUri>monaco.Uri.parse(`${encodeURI(reference.projectId)}/${encodeURI(reference.symbol)}/2`);
+            uri2.projectId = reference.projectId;
+            uri2.symbol = reference.symbol;
+
+            return [
+                {
+                    uri: uri,
+                    range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 }
+                }, {
+                    uri: uri2,
+                    range: { startLineNumber: 5, startColumn: 7, endLineNumber: 5, endColumn: 8 }
+                }
+            ];
+        }
+    });
+
     monaco.languages.registerDefinitionProvider(codexLanguage, {
         provideDefinition: function (model, position) {
             let offset = model.getOffsetAt(position);
             let reference = getReference(state.sourceFileModel, offset);
+            if (!reference) {
+                return undefined;
+            }
+
             // URI is a bit weird in monaco
             // It strips out /? part of the uri.
             // So we're not relying on the real uri here and using
@@ -224,20 +256,23 @@ function registerEditorProviders() {
         }
     });
 
-    monaco.languages.registerReferenceProvider(codexLanguage, {
-        provideReferences: function (model, position) {
-            // To be implemented.
-            //var word = model.getWordAtPosition(position);
-            //if (word && word.word === "B") {
-            //    return [{ uri: monaco.Uri.parse("bar/c"), range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 } }]
-            //}
-            return [];
-        }
-    });
+    //monaco.languages.registerReferenceProvider(codexLanguage, {
+    //    provideReferences: function (model, position) {
+    //        // To be implemented.
+    //        //var word = model.getWordAtPosition(position);
+    //        //if (word && word.word === "B") {
+    //        //    return [{ uri: monaco.Uri.parse("bar/c"), range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 } }]
+    //        //}
+    //        return [];
+    //    }
+    //});
 
     monaco.languages.registerHoverProvider(codexLanguage, {
         provideHover: function (model, position) {
             let reference = getSymbolAtPosition(state.editor, position);
+            if (!reference) {
+                return undefined;
+            }
             let uri = <SymbolicUri>monaco.Uri.parse(`${encodeURI(reference.projectId)}/${encodeURI(reference.symbol)}`);
             uri.projectId = reference.projectId;
             uri.symbol = reference.symbol;
@@ -434,20 +469,62 @@ function debugDisplayPosition(editor: monaco.editor.IStandaloneCodeEditor) {
     //state.editor.addOverlayWidget(contentWidget);
 
     editor.onMouseDown(function (e) {
-        contentNode.innerHTML = "Position: " + state.editor.getModel().getOffsetAt(e.target.position);
+        if (e.target.position) {
+            contentNode.innerHTML = "Position: " + state.editor.getModel().getOffsetAt(e.target.position);
+        }
     });
 }
 
+function addToolbarWidget(editor: monaco.editor.IStandaloneCodeEditor) {
+    var toolBarPane = document.createElement('div');
+    var documentOutlineButton = document.createElement('img');
+    documentOutlineButton.setAttribute('src', '../../content/icons/DocumentOutline.png');
+    documentOutlineButton.title = "Document Outline";
+    documentOutlineButton.className = 'documentOutlineButton';
+    documentOutlineButton.onclick = showDocumentOutline;
+    toolBarPane.appendChild(documentOutlineButton);
+
+    var projectExplorerButton = document.createElement('img');
+    var projectExplorerIcon = '../../content/icons/CSharpProjectExplorer.png';
+
+    projectExplorerButton.setAttribute('src', projectExplorerIcon);
+    projectExplorerButton.title = "Project Explorer";
+    projectExplorerButton.className = 'projectExplorerButton';
+    projectExplorerButton.onclick = function () { document.getElementById('projectExplorerLink').click(); };
+    toolBarPane.appendChild(projectExplorerButton);
+
+    var namespaceExplorerButton = document.createElement('img');
+    namespaceExplorerButton.setAttribute('src', '../../content/icons/NamespaceExplorer.png');
+    namespaceExplorerButton.title = "Namespace Explorer";
+    namespaceExplorerButton.className = 'namespaceExplorerButton';
+    namespaceExplorerButton.onclick = showNamespaceExplorer;
+
+    var toolBarWidget: monaco.editor.IOverlayWidget = {
+        getId: function () {
+            return 'codex.toolbar.widget';
+        },
+        getDomNode: function () {
+            return toolBarPane;
+        },
+        getPosition: function () {
+            return { preference: monaco.editor.OverlayWidgetPositionPreference.TOP_RIGHT_CORNER };
+        }
+    };
+
+    editor.addOverlayWidget(toolBarWidget);
+}
+
 function registerEditorActions(editor: monaco.editor.IStandaloneCodeEditor) {
+    let actions = editor.getSupportedActions();
     editor.addAction({
         // An unique identifier of the contributed action.
         id: 'Codex.FindAllReferences.LeftPane',
 
         // A label of the action that will be presented to the user.
-        label: 'Find All References (Advanced)',
+        label: 'Find All References',
 
         // An optional array of keybindings for the action.
-        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.F10],
+        keybindings: [monaco.KeyMod.Shift | monaco.KeyCode.F12],
 
         // A precondition for this action.
         precondition: null,
