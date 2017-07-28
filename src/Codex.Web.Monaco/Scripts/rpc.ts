@@ -20,7 +20,7 @@ function server<T>(url: string): Promise<T> {
     });
 }
 
-function getReference(_this: SourceFileContentsModel, position: number): SymbolSpan {
+function getReference(_this: SourceFile, position: number): SymbolSpan {
     let segmentIndex = ~~(position / _this.segmentLength);
     if (segmentIndex >= _this.segments.length) {
         return undefined;
@@ -41,7 +41,7 @@ function getReference(_this: SourceFileContentsModel, position: number): SymbolS
     return undefined;
 }
 
-function getDefinition(_this: SourceFileContentsModel, position: number): SymbolSpan {
+function getDefinition(_this: SourceFile, position: number): SymbolSpan {
     let segmentIndex = ~~(position / _this.segmentLength);
     if (segmentIndex >= _this.segments.length) {
         return undefined;
@@ -62,7 +62,7 @@ function getDefinition(_this: SourceFileContentsModel, position: number): Symbol
     return undefined;
 }
 
-function getDefinitionForSymbol(_this: SourceFileContentsModel, symbolId: string): SymbolSpan {
+function getDefinitionForSymbol(_this: SourceFile, symbolId: string): SymbolSpan {
     if (!_this.segments) {
         return undefined;
     }
@@ -78,9 +78,9 @@ function getDefinitionForSymbol(_this: SourceFileContentsModel, symbolId: string
     return undefined;
 }
 
-function getSourceFileContents(projectId: string, filePath: string): Promise<SourceFileContentsModel> {
+function getSourceFileContents(projectId: string, filePath: string): Promise<SourceFile> {
     let url = `/sourcecontent/${encodeURI(projectId)}/?filename=${encodeURI(filePath)}`;
-    return serverWithPrefix<SourceFileContentsModel>(url);
+    return serverWithPrefix<SourceFile>(url);
 }
 
 function getFindAllReferencesHtml(projectId: string, symbolId: string, projectScope?: string): Promise<string> {

@@ -290,7 +290,7 @@ function LoadSourceCodeCore(project: string, file: string, symbolId: string, lin
 }
 
 async function FillRightPane(url: string, symbolId: string, lineNumber: number, project: string, file: string) {
-    try {
+    // try {
         let data = await server(url);
         displayFile(data, symbolId, lineNumber);
 
@@ -302,7 +302,22 @@ async function FillRightPane(url: string, symbolId: string, lineNumber: number, 
             }
         }
 
-        createMonacoEditorAndDisplayFileContent(project, file, sourceFileData, lineNumber);
+        // createMonacoEditorAndDisplayFileContent(project, file, sourceFileData, lineNumber);
+
+        if (!state.codexEditor) {
+            let result = await CodexEditor.createAsync(undefined, undefined, document.getElementById('editorPane'));
+            state.codexEditor = result;
+        }
+
+        let targetLocation: TargetEditorLocation = undefined;
+        if (sourceFileData.span) {
+            targetLocation = {kind: 'span', value: sourceFileData.span};
+        }
+
+        if (sourceFileData.contents) {
+            state.codexEditor.openFile(sourceFileData, targetLocation);
+        }
+        
         let bottomPaneInnerHtml = document.getElementById("bottomPaneHidden").innerHTML;
         bottomPaneInnerHtml = replaceAll(replaceAll(replaceAll(replaceAll(bottomPaneInnerHtml,
             "{filePath}", file),
@@ -310,10 +325,10 @@ async function FillRightPane(url: string, symbolId: string, lineNumber: number, 
             "{repoRelativePath}", sourceFileData.repoRelativePath || ""),
             "{webLink}", sourceFileData.webLink || "");
         document.getElementById("bottomPane").innerHTML = bottomPaneInnerHtml;
-    }
-    catch (e) {
-        setRightPane("<div class='note'>" + e + "</div>");
-    }
+    // }
+    // catch (e) {
+    //     setRightPane("<div class='note'>" + e + "</div>");
+    // }
 }
 
 function displayFile(data, symbolId, lineNumber) {

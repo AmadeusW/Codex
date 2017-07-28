@@ -47,18 +47,20 @@ function getOrCreateModelFrom(content: string, project: string, file: string, la
     return model;
 }
 
-function createMonacoEditorAndDisplayFileContent(project: string, file: string, sourceFile: SourceFileContentsModel, lineNumber: number) {
+function createMonacoEditorAndDisplayFileContent(project: string, file: string, sourceFile: SourceFile, lineNumber: number) {
     // Need to initialize the edit each time now.
     //state.editor = undefined;
     state.sourceFileModel = sourceFile;
-
+    console.log("createMonacoEditorAndDisplayFileContent");
     if (!state.editor) {
         require.config({ paths: { 'vs': 'node_modules/monaco-editor/dev/vs' } });
 
         var editorPane = document.getElementById('editorPane');
         if (editorPane) {
+            console.log("creating the editor")
             require(['vs/editor/editor.main'],
                 function () {
+                    console.log("require callback")
                     // Need to define a class that extends the monaco.Uri
                     // only when the monaco stuff is loaded.
                     class SymbolicUri extends monaco.Uri {
@@ -66,7 +68,7 @@ function createMonacoEditorAndDisplayFileContent(project: string, file: string, 
                         symbol: string;
                     }
 
-                    registerEditorProviders();
+                    //registerEditorProviders();
 
                     state.currentTextModel = createModelFrom(state.sourceFileModel.contents, project, file);
 
@@ -92,7 +94,7 @@ function createMonacoEditorAndDisplayFileContent(project: string, file: string, 
                     // For debugging purposes only.
                     debugDisplayPosition(state.editor);
 
-                    changeEditorPositionTo(state.editor, sourceFile.span, lineNumber);
+                    // changeEditorPositionTo(state.editor, sourceFile.span, lineNumber);
                 });
         }
     }
@@ -101,7 +103,7 @@ function createMonacoEditorAndDisplayFileContent(project: string, file: string, 
         // Editor is already existed.
         state.currentTextModel = createModelFrom(state.sourceFileModel.contents, project, file);
         state.editor.setModel(state.currentTextModel);
-        changeEditorPositionTo(state.editor, sourceFile.span, lineNumber);
+        // changeEditorPositionTo(state.editor, sourceFile.span, lineNumber);
 
     }
 }
@@ -110,37 +112,6 @@ function createMonacoEditorAndDisplayFileContent(project: string, file: string, 
 function lineNumberProvider(lineNumber: number) {
     var url = getUrlForState(state.currentState) + "&line=" + lineNumber;
     return "<a href='" + url + "'>" + lineNumber + "</a>";
-}
-
-function changeEditorPositionTo(editor: monaco.editor.IStandaloneCodeEditor, span: Span, lineNumber: number) {
-    editor.focus();
-    let position;
-    let length = 0;
-    if (span) {
-        position = state.currentTextModel.getPositionAt(span.position);
-        length = span.length;
-    } else if (lineNumber) {
-        position = { lineNumber: lineNumber, column: 1 }
-    }
-
-    if (position) {
-        editor.revealPositionInCenter(position);
-        editor.setPosition(position);
-        editor.deltaDecorations([],
-            [
-                {
-                    range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
-                    options: { className: 'highlightLine', isWholeLine: true }
-                }
-            ]);
-
-        editor.setSelection({
-            startLineNumber: position.lineNumber,
-            startColumn: position.column,
-            endLineNumber: position.lineNumber,
-            endColumn: position.column + length
-        });
-    }
 }
 
 function getSymbolAtPosition(editor: monaco.editor.IEditor, position?: monaco.IPosition): SymbolSpan {
@@ -208,13 +179,13 @@ async function openEditorForLocation(source: SourceFileOrView) {
 
         state.editor.setModel(model);
 
-        changeEditorPositionTo(state.editor, source.span, undefined);
+        // changeEditorPositionTo(state.editor, source.span, undefined);
     }
 
     return monaco.Promise.as(null);
 }
 
-function registerEditorProviders() {
+function registerEditorProviders2() {
     if (state.editorRegistered) {
         return;
     }
@@ -528,7 +499,7 @@ function debugDisplayPosition(editor: monaco.editor.IStandaloneCodeEditor) {
 
     editor.onMouseDown(function (e) {
         if (e.target.position) {
-            contentNode.innerHTML = "Position: " + state.editor.getModel().getOffsetAt(e.target.position);
+            contentNode.innerHTML = "Position: " + editor.getModel().getOffsetAt(e.target.position);
         }
     });
 }
@@ -637,7 +608,7 @@ function registerFocusSearchBox(editor: monaco.editor.IStandaloneCodeEditor) {
 function registerCtrlClickBehaviour(editor: monaco.editor.IStandaloneCodeEditor) {
     editor.onMouseDown(e => {
         if (e.event.ctrlKey) {
-            var target = getTargetAtPosition(state.editor).then(definitionLocation => {
+            var target = getTargetAtPosition(editor).then(definitionLocation => {
                 openEditorForLocation(definitionLocation);
             },
                 e => { });
@@ -646,12 +617,12 @@ function registerCtrlClickBehaviour(editor: monaco.editor.IStandaloneCodeEditor)
 
     editor.onMouseMove(e => {
         if (e.event.ctrlKey) {
-            let symbol = getSymbolAtPosition(state.editor, e.target.position);
+            let symbol = getSymbolAtPosition(editor, e.target.position);
             if (symbol) {
-                let start = state.editor.getModel().getPositionAt(symbol.span.position);
-                let end = state.editor.getModel().getPositionAt(symbol.span.position + symbol.span.length);
+                let start = editor.getModel().getPositionAt(symbol.span.position);
+                let end = editor.getModel().getPositionAt(symbol.span.position + symbol.span.length);
 
-                state.ctrlClickLinkDecorations = state.editor.deltaDecorations(state.ctrlClickLinkDecorations || [], [
+                state.ctrlClickLinkDecorations = editor.deltaDecorations(state.ctrlClickLinkDecorations || [], [
                     {
                         range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
                         options: { inlineClassName: 'blueLink' }
@@ -661,7 +632,7 @@ function registerCtrlClickBehaviour(editor: monaco.editor.IStandaloneCodeEditor)
         }
 
         if (state.ctrlClickLinkDecorations) {
-            state.ctrlClickLinkDecorations = state.editor.deltaDecorations(state.ctrlClickLinkDecorations || [], []);
+            state.ctrlClickLinkDecorations = editor.deltaDecorations(state.ctrlClickLinkDecorations || [], []);
         }
     });
 

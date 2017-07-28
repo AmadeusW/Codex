@@ -1,5 +1,113 @@
 /// <reference path="../node_modules/@types/jquery/index.d.ts"/>
 
+interface ICodexWebPage {
+    findAllReferences(projectId: string, symbol: string): Promise<void>;
+}
+
+interface ICodexEditor {
+    openFile(sourceFile: SourceFile, targetLocation?: TargetEditorLocation): Promise<void> | void;
+
+    navigateTo(targetLocation: TargetEditorLocation);
+}
+
+interface ICodexWebServer {
+    getSourceFile(projectId: string, filePath: string): Promise<SourceFile>;
+}
+
+class CodexWebServer implements ICodexWebServer {
+    getSourceFile(projectId: string, filePath: string): Promise<SourceFile> {
+        throw notImplemented();
+    }
+}
+
+class CodexWebPage implements ICodexWebPage {
+    
+    private editor: CodexEditor;
+    private server: CodexWebServer;
+
+    private right: RightPaneViewModel;
+
+    private editorPane: HTMLElement;
+
+    setViewModel(viewModel: IViewModel) {
+        if (viewModel.right) {
+            this.setRightPane(viewModel.right);
+        }
+
+        if (viewModel.left) {
+            this.setLeftPane(viewModel.left);
+        }
+    }
+
+    private async setRightPane(viewModel: RightPaneViewModel) {
+        if (this.right || this.right.kind !== viewModel.kind) {
+            switch(viewModel.kind) {
+                case 'SourceFile':
+                    this.editor = await CodexEditor.createAsync(this.server, this, this.editorPane);
+                    break;
+                case 'Home':
+                    break;
+            }
+        }
+
+        if (viewModel.kind === 'SourceFile') {
+            
+        }
+    }
+
+    private async applyFileViewModel(newModel: FileViewModel, oldModel: FileViewModel) {
+        if (newModel.filePath !== oldModel.filePath || newModel.projectId !== oldModel.projectId) {
+            const sourceFile = newModel.sourceFile || await this.server.getSourceFile(newModel.projectId, newModel.filePath);
+            this.editor.openFile(sourceFile, newModel.targetLocation);
+            return;
+        }
+        
+        if (newModel.targetLocation !== oldModel.targetLocation) {
+            this.editor.navigateTo(newModel.targetLocation);
+        }
+    }
+
+    private setLeftPane(viewModel: ILeftPaneViewModel) {
+        throw notImplemented();
+    }
+
+    findAllReferences(projectId: string, symbol: string): Promise<void> {
+        throw notImplemented();
+    }
+}
+
+function notImplemented(): Error {
+    throw new Error("Method not implemented.");
+}
+
+interface IViewModel {
+    right: RightPaneViewModel;
+    left: ILeftPaneViewModel;
+}
+
+interface ILeftPaneViewModel {
+
+}
+
+interface HomeViewModel {
+    kind: 'Home';
+}
+
+type LineNumber = number;// {kind: 'number'; value: number}
+type Symbol = { symbolId: string, projectId: string };//kind: 'symbol'; value: string}
+type TargetEditorLocation = {kind: 'number'; value: LineNumber} | {kind: 'symbol'; value: Symbol} | {kind: 'span'; value: Span};
+
+interface FileViewModel {
+    kind: 'SourceFile';
+    //\
+    sourceFile: SourceFile | undefined;
+    projectId: string;
+    filePath: string;
+    targetLocation: TargetEditorLocation;
+}
+
+type RightPaneViewModel = HomeViewModel | FileViewModel;
+
 interface Span {
     position: number;
     length: number;
@@ -25,13 +133,14 @@ interface ClassificationSpan extends Span {
     name: string;
 }
 
-interface SourceFileContentsModel {
+interface SourceFile {
     filePath: string;
     webLink: string;
     repoRelativePath: string;
     projectId: string;
 
     contents: string;
+    // TODO: move span out?
     span: LineSpan;
     segments: SegmentModel[];
     classifications: ClassificationSpan[];
@@ -47,7 +156,7 @@ interface SymbolInformation {
     span: Span;
 }
 
-type SourceFileOrView = string | SourceFileContentsModel;
+type SourceFileOrView = string | SourceFile;
 
 interface ToolTip {
     projectId: string;
