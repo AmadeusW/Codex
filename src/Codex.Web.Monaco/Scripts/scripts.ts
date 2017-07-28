@@ -124,7 +124,13 @@ function setLeftPane(text) {
     leftPane.innerHTML = text;
 }
 
-function setRightPane(text?: string) {
+function setRightPane(text?: string, isEditor: boolean = false) {
+    if (state.rightPaneIsEditor == isEditor) {
+        return;
+    }
+
+    state.rightPaneIsEditor = isEditor;
+
     if (!text) {
         text = "<div></div>";
     }
@@ -292,7 +298,7 @@ async function FillRightPane(url: string, symbolId: string, lineNumber: number, 
         if (symbolId) {
             let definitionSpan = getDefinitionForSymbol(sourceFileData, symbolId);
             if (definitionSpan) {
-                sourceFileData.span = definitionSpan.span;
+                sourceFileData.span = <LineSpan>definitionSpan.span;
             }
         }
 
@@ -315,7 +321,7 @@ function displayFile(data, symbolId, lineNumber) {
     //    loadMonacoEditor(data.contents);
     //}
 
-    setRightPane(data);
+    setRightPane(data, true);
 
     //var filePath = getFilePath();
     //if (filePath && filePath !== state.currentState.filePath) {
@@ -628,6 +634,10 @@ function expandFolderIfNeeded(folder) {
 
 function getEditorPane(): HTMLElement {
     return document.getElementById("editorPane");
+}
+
+function getEditorWrapperPane(): HTMLElement {
+    return document.getElementById("editorPaneWrapper");
 }
 
 function getFilePath(): string {    

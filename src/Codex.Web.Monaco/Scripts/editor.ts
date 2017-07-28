@@ -11,6 +11,8 @@ declare const require: any;
 declare class SymbolicUri extends monaco.Uri {
     projectId: string;
     symbol: string;
+    definitionResult: SourceFileOrView;
+    model: monaco.editor.IModel;
 }
 
 const codexLanguage = 'cdx';
@@ -18,16 +20,36 @@ const codexLanguage = 'cdx';
 function createModelFrom(content: string, project: string, file: string) {
     if (state.currentTextModel) {
         state.currentTextModel.dispose();
+
+        for (let modelId in models) {
+            models[modelId].dispose();
+        }
+
+        models = {};
+    }
+    
+    state.currentTextModel = getOrCreateModelFrom(content, project, file);
+    return state.currentTextModel;
+}
+
+let models = {};
+
+function getOrCreateModelFrom(content: string, project: string, file: string, language: string = undefined) {
+    let key = `${project}/${file}/`;
+
+    let model = models[key];
+    if (!model) {
+        let uri = monaco.Uri.parse(key);
+        model = monaco.editor.createModel(content, language || codexLanguage, uri);
+        models[key] = model;
     }
 
-    var key = `${project}/${file}`;
-    state.currentTextModel = monaco.editor.createModel(content, codexLanguage, monaco.Uri.parse(key));
-    return state.currentTextModel;
+    return model;
 }
 
 function createMonacoEditorAndDisplayFileContent(project: string, file: string, sourceFile: SourceFileContentsModel, lineNumber: number) {
     // Need to initialize the edit each time now.
-    state.editor = undefined;
+    //state.editor = undefined;
     state.sourceFileModel = sourceFile;
 
     if (!state.editor) {
@@ -55,7 +77,11 @@ function createMonacoEditorAndDisplayFileContent(project: string, file: string, 
                         theme: 'codex',
                         lineNumbers: lineNumberProvider,
                         scrollBeyondLastLine: true
-                    }, { editorService: { openEditor: openEditor } });
+                    },
+                        {
+                            editorService: { openEditor: openEditor },
+                            textModelService: {createModelReference: createModelReference }
+                        });
 
                     // Ctrl + click goes to the symbol or to the references of the symbol
                     registerCtrlClickBehaviour(state.editor);
@@ -75,6 +101,8 @@ function createMonacoEditorAndDisplayFileContent(project: string, file: string, 
         // Editor is already existed.
         state.currentTextModel = createModelFrom(state.sourceFileModel.contents, project, file);
         state.editor.setModel(state.currentTextModel);
+        changeEditorPositionTo(state.editor, sourceFile.span, lineNumber);
+
     }
 }
 
@@ -151,9 +179,21 @@ function getTargetAtPosition(editor: monaco.editor.IEditor): Promise<SourceFileO
     return Promise.resolve(undefined);
 }
 
-async function openEditor(input: { resource: SymbolicUri }) {
-    let definitionLocation = await getDefinitionLocation(input.resource.projectId, input.resource.symbol);
+function openEditor(input: { resource: SymbolicUri }) {
+    let definitionLocation = input.resource.definitionResult;
     return openEditorForLocation(definitionLocation);
+}
+
+
+function createModelReference(input: SymbolicUri) {
+    let d = input.definitionResult;
+    if (typeof d === "string") {
+        return monaco.Promise.as(null);
+    } else {
+        const model = getOrCreateModelFrom(d.contents, d.projectId, d.filePath, 'csharp');
+
+        return monaco.Promise.as({ object: { textEditorModel: model, dispose: () => {} }, dispose: () => {} });
+    }
 }
 
 async function openEditorForLocation(source: SourceFileOrView) {
@@ -233,12 +273,14 @@ function registerEditorProviders() {
     });
 
     monaco.languages.registerDefinitionProvider(codexLanguage, {
-        provideDefinition: function (model, position) {
+        provideDefinition: async function (model, position) {
             let offset = model.getOffsetAt(position);
             let reference = getReference(state.sourceFileModel, offset);
             if (!reference) {
                 return undefined;
             }
+
+            let definitionResult = await getDefinitionLocation(reference.projectId, reference.symbol);
 
             // URI is a bit weird in monaco
             // It strips out /? part of the uri.
@@ -248,13 +290,29 @@ function registerEditorProviders() {
             let uri = <SymbolicUri>monaco.Uri.parse(`${encodeURI(reference.projectId)}/${encodeURI(reference.symbol)}`);
             uri.projectId = reference.projectId;
             uri.symbol = reference.symbol;
+            uri.definitionResult = definitionResult;
+
+            let range: monaco.IRange = { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 };
+
+            if (!(typeof definitionResult === "string")) {
+                range = {
+                    startLineNumber: definitionResult.span.line,
+                    startColumn: definitionResult.span.column,
+                    endLineNumber: definitionResult.span.line,
+                    endColumn: definitionResult.span.column + definitionResult.span.length
+                };
+            }
 
             return {
                 uri: uri,
-                range: { startLineNumber: 1, startColumn: 7, endLineNumber: 1, endColumn: 8 }
+                range
             }
         }
     });
+
+    //function getRangeFromSpan(span: Span): monaco.IRange {
+        
+    //}
 
     //monaco.languages.registerReferenceProvider(codexLanguage, {
     //    provideReferences: function (model, position) {

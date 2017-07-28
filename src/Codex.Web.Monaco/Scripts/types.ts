@@ -5,6 +5,11 @@ interface Span {
     length: number;
 }
 
+interface LineSpan extends Span {
+    line: number;
+    column: number;
+}
+
 interface SymbolSpan {
     symbol: string;
     projectId: string;
@@ -27,7 +32,7 @@ interface SourceFileContentsModel {
     projectId: string;
 
     contents: string;
-    span: Span;
+    span: LineSpan;
     segments: SegmentModel[];
     classifications: ClassificationSpan[];
     documentSymbols: SymbolInformation[];

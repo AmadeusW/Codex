@@ -254,10 +254,12 @@ namespace WebUI.Controllers
                     if (sourceFile != null)
                     {
                         var referringSpan = definitions.Entries[0].ReferringSpan;
-                        var position = new Span()
+                        var position = new LineSpan()
                         {
                             position = referringSpan.Start,
                             length = referringSpan.Length,
+                            line = definitionReference.ReferringSpan.LineNumber + 1,
+                            column = definitionReference.ReferringSpan.LineSpanStart + 1
                         };
                         sourceFile.span = position;
                     }
@@ -328,12 +330,14 @@ namespace WebUI.Controllers
                     {
                         projectId = definitionReference.ReferringProjectId,
                         filename = definitionReference.File,
-                        span = new Span()
+                        span = new LineSpan()
                         {
                             position = referringSpan.Start,
                             length = referringSpan.Length,
+                            line = definitionReference.ReferringSpan.LineNumber + 1,
+                            column = definitionReference.ReferringSpan.LineSpanStart + 1
                         }
-                    };
+                };
 
                     return WrapTheModel(model);
                 }

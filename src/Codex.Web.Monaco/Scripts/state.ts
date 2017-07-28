@@ -14,6 +14,7 @@ namespace state {
     export let searchBox: any;
     export let lastSearchString: any;
     export let selectedFile;
+    export let rightPaneIsEditor: boolean;
 
     export let lastQuery: string = null;
     export let searchTimerID: number = -1;

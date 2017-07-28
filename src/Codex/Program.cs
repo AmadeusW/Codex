@@ -29,7 +29,7 @@ namespace Codex.Application
 
         static void Main(string[] args)
         {
-            if (args.Length != 2) throw new ArgumentException("Usage: codex repoName repoPath");
+            if (args.Length != 2 && args.Length != 3) throw new ArgumentException("Usage: codex repoName repoPath solutionPath?");
             RunRepoImporter(args);
 
             if (!analysisOnly)

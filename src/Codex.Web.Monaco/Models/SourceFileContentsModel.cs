@@ -14,6 +14,12 @@ namespace Codex.Web.Monaco.Models
         public int length { get; set; }
     }
 
+    public class LineSpan : Span
+    {
+        public int line { get; set; }
+        public int column { get; set; }
+    }
+
     public class ClassificationSpan : Span
     {
         public string name { get; set; }
@@ -30,7 +36,7 @@ namespace Codex.Web.Monaco.Models
     {
         public string projectId { get; set; }
         public string filename { get; set; }
-        public Span span { get; set; }
+        public LineSpan span { get; set; }
     }
 
     public class SegmentModel
