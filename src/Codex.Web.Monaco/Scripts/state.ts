@@ -1,15 +1,13 @@
 /// <reference path="../node_modules/@types/jquery/index.d.ts"/>
 /// <reference path="../node_modules/monaco-editor/monaco.d.ts"/>
+/// <reference path="types.ts" />
 /// <reference path="codexEditor.ts" />
 
 namespace state {
     export let codexWebRootPrefix = "";
     export let defaultWindowTitle = "Index";
+    export let WebPage: CodexWebPage;
     export let codexEditor: CodexEditor;
-    export let editor: monaco.editor.IStandaloneCodeEditor;
-    export let editorRegistered: boolean;
-    export let sourceFileModel: SourceFile;
-    export let currentTextModel: monaco.editor.IModel;
     export let ctrlClickLinkDecorations: string[];
     
     export let currentState: CodexWebState;
@@ -41,4 +39,9 @@ interface CodexWebState {
     windowTitle: string;
     leftPaneContent: LeftPaneContent;
     rightPaneContent: RightPaneContent;
+}
+
+function main() {
+    state.WebPage = new CodexWebPage();
+    state.WebPage.setViewModel({left: undefined, right: {kind: 'Overview'}});
 }

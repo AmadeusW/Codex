@@ -20,6 +20,12 @@ class CodexEditor implements ICodexEditor {
     private currentTextModel: monaco.editor.IModel;
     private models = {};
 
+    get filePath(): string { return this.sourceFileModel.filePath; }
+    get projectId(): string {return this.sourceFileModel.projectId; }
+    get repoRelativePath(): string {return this.sourceFileModel.repoRelativePath || ""; }
+    get webLink(): string {return this.sourceFileModel.webLink || ""; }
+    
+
     private constructor(private webServer: ICodexWebServer, private webSite: ICodexWebPage, private container: HTMLElement) {
 
     }
@@ -546,7 +552,7 @@ class CodexEditor implements ICodexEditor {
         documentOutlineButton.setAttribute('src', '../../content/icons/DocumentOutline.png');
         documentOutlineButton.title = "Document Outline";
         documentOutlineButton.className = 'documentOutlineButton';
-        documentOutlineButton.onclick = showDocumentOutline;
+        documentOutlineButton.onclick = () => { this.webSite.showDocumentOutline(this.sourceFileModel.projectId, this.sourceFileModel.filePath); };
         toolBarPane.appendChild(documentOutlineButton);
 
         var projectExplorerButton = document.createElement('img');
@@ -555,14 +561,14 @@ class CodexEditor implements ICodexEditor {
         projectExplorerButton.setAttribute('src', projectExplorerIcon);
         projectExplorerButton.title = "Project Explorer";
         projectExplorerButton.className = 'projectExplorerButton';
-        projectExplorerButton.onclick = () => { document.getElementById('projectExplorerLink').click(); };
+        projectExplorerButton.onclick = () => { this.webSite.showProjectExplorer(this.sourceFileModel.projectId); };
         toolBarPane.appendChild(projectExplorerButton);
 
         var namespaceExplorerButton = document.createElement('img');
         namespaceExplorerButton.setAttribute('src', '../../content/icons/NamespaceExplorer.png');
         namespaceExplorerButton.title = "Namespace Explorer";
         namespaceExplorerButton.className = 'namespaceExplorerButton';
-        namespaceExplorerButton.onclick = showNamespaceExplorer;
+        namespaceExplorerButton.onclick = () => { this.webSite.showNamespaceExplorer(this.sourceFileModel.projectId); };
 
         var toolBarWidget: monaco.editor.IOverlayWidget = {
             getId: () => 'codex.toolbar.widget',

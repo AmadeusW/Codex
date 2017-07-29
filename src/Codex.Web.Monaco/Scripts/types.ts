@@ -3,6 +3,12 @@
 interface ICodexWebPage {
     findAllReferences(projectId: string, symbol: string): Promise<void>;
 
+    showDocumentOutline(projectId: string, filePath: string);
+
+    showProjectExplorer(projectId: string);
+
+    showNamespaceExplorer(projectId: string);
+
     getUrlForLine(lineNumber: number): string;
 }
 
@@ -39,6 +45,7 @@ class CodexWebPage implements ICodexWebPage {
     private right: RightPaneViewModel;
 
     private editorPane: HTMLElement;
+    private editorContainerPane: HTMLElement;
 
     setViewModel(viewModel: IViewModel) {
         if (viewModel.right) {
@@ -51,12 +58,17 @@ class CodexWebPage implements ICodexWebPage {
     }
 
     private async setRightPane(viewModel: RightPaneViewModel) {
-        if (this.right || this.right.kind !== viewModel.kind) {
+        if (!this.right || this.right.kind !== viewModel.kind) {
             switch(viewModel.kind) {
                 case 'SourceFile':
-                    this.editor = await CodexEditor.createAsync(this.server, this, this.editorPane);
+                    if (!await this.initializeEditorAsync()) {
+                        // initialize sets the pane content so only set pane
+                        // if editor was not initialized
+                        this.setRightPaneChild(this.editorContainerPane);
+                    }
                     break;
-                case 'Home':
+                case 'Overview':
+                    this.loadOverview();
                     break;
             }
         }
@@ -64,6 +76,42 @@ class CodexWebPage implements ICodexWebPage {
         if (viewModel.kind === 'SourceFile') {
             
         }
+
+        this.right = viewModel;
+    }
+
+    private async initializeEditorAsync(): Promise<boolean> {
+        if (!this.editor) {
+            this.editorContainerPane = document.createElement('div');
+            let template = document.getElementById('rightPaneEditorContents');
+            this.replaceEditorDataTokens(template, this.editorContainerPane);
+            this.setRightPaneChild(this.editorContainerPane);
+
+            // TODO: Maybe give editor pane a different id to start and then change to editor pane
+            // here
+            this.editorPane = document.getElementById('editorPane');
+
+            this.editor = await CodexEditor.createAsync(this.server, this, this.editorPane);
+            return true;
+        }
+
+        return false;
+    }
+
+    private replaceEditorDataTokens(sourceElement: HTMLElement, targetElement: HTMLElement) {
+        let bottomPaneInnerHtml = document.getElementById("bottomPaneHidden").innerHTML;
+        bottomPaneInnerHtml = replaceAll(replaceAll(replaceAll(replaceAll(bottomPaneInnerHtml,
+            "{filePath}", this.editor.filePath),
+            "{projectId}", this.editor.projectId),
+            "{repoRelativePath}", this.editor.repoRelativePath),
+            "{webLink}", this.editor.webLink);
+        targetElement.innerHTML = bottomPaneInnerHtml;
+    }
+
+    private populateEditorBottomPane() {
+        let bottomPaneTemplate = document.getElementById("bottomPaneHidden");
+        let bottomPane = document.getElementById("bottomPane");
+        this.replaceEditorDataTokens(bottomPaneTemplate, bottomPane);
     }
 
     private async applyFileViewModel(newModel: FileViewModel, oldModel: FileViewModel) {
@@ -84,12 +132,54 @@ class CodexWebPage implements ICodexWebPage {
 
     getUrlForLine(lineNumber: number): string {
         var newState = jQuery.extend({}, state.currentState, { lineNumber: lineNumber, rightPaneContent: 'line' });
-        return getUrlForState(newState);
+        return getUrlForState(newState)
     }
 
     async findAllReferences(projectId: string, symbol: string): Promise<void> {
         const html = await rpc.getFindAllReferencesHtml(projectId, symbol);
         updateReferences(html);
+    }
+
+    async showDocumentOutline(projectId: string, filePath: string) {
+        notImplemented();
+    }
+
+    async showProjectExplorer(projectId: string) {
+        notImplemented();
+    }
+
+    async showNamespaceExplorer(projectId: string) {
+        notImplemented();
+    }
+
+    private loadRightPaneFrom(url: string) {
+    rpc.server<string>(url).then(
+        data => this.setRightPaneView(data),
+        e => this.setRightPaneView("<div class='note'>" + e + "</div>"));
+    }
+
+    private loadLeftPaneFrom(url: string) {
+        rpc.server<string>(url).then(
+            data => setLeftPane(data),
+            e => setLeftPane("<div class='note'>" + e + "</div>"));
+    }
+
+    private loadOverview() {
+        this.loadRightPaneFrom("/overview/");
+    }
+
+    private setRightPaneView(text: string) {
+        var rightPane = document.getElementById("rightPane");
+        rightPane.innerHTML = text;
+    }
+
+    private setRightPaneChild(child: HTMLElement) {
+        var rightPane = document.getElementById("rightPane");
+        while (rightPane.firstChild) {
+            rightPane.removeChild(rightPane.firstChild);
+        }
+
+        rightPane.appendChild(child);
     }
 }
 
@@ -106,8 +196,8 @@ interface ILeftPaneViewModel {
 
 }
 
-interface HomeViewModel {
-    kind: 'Home';
+interface OverviewViewModel {
+    kind: 'Overview';
 }
 
 type LineNumber = number;// {kind: 'number'; value: number}
@@ -123,7 +213,7 @@ interface FileViewModel {
     targetLocation: TargetEditorLocation;
 }
 
-type RightPaneViewModel = HomeViewModel | FileViewModel;
+type RightPaneViewModel = OverviewViewModel | FileViewModel;
 
 interface Span {
     position: number;

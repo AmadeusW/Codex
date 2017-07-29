@@ -351,35 +351,6 @@ function displayFile(data, symbolId, lineNumber) {
     trackActiveItemInSolutionExplorer();
 }
 
-function GoToSymbolOrLineNumber(symbolId, lineNumber) {
-    var blurLine = false;
-    if (symbolId) {
-        var symbolElement = $("#" + symbolId);
-        if (symbolElement[0]) {
-            symbolElement.scrollTop();
-            symbolElement.focus();
-        }
-        else if (!lineNumber)
-        {
-            lineNumber = 1;
-            symbolId = undefined;
-            blurLine = true;
-        }
-    }
-
-    if (lineNumber && !symbolId) {
-        var lineNumberElement = $("#l" + lineNumber);
-        if (lineNumberElement[0]) {
-            lineNumberElement.scrollTop();
-            lineNumberElement.focus();
-            if (blurLine)
-            {
-                lineNumberElement.blur();
-            }
-        }
-    }
-}
-
 function LoadProjectExplorer(project) {
     UpdateState({
         leftProjectId: project,
@@ -543,36 +514,6 @@ function appendParam(url, name, value) {
     result += name + "=" + encodeURIComponent(value);
 
     return result;
-}
-
-function addToolbar() {
-    var editorPane = document.getElementById("sourceCode");
-    if (!editorPane) {
-        return;
-    }
-
-    var documentOutlineButton = document.createElement('img');
-    documentOutlineButton.setAttribute('src', '../../content/icons/DocumentOutline.png');
-    documentOutlineButton.title = "Document Outline";
-    documentOutlineButton.className = 'documentOutlineButton';
-    documentOutlineButton.onclick = showDocumentOutline;
-    editorPane.appendChild(documentOutlineButton);
-
-    var projectExplorerButton = document.createElement('img');
-    var projectExplorerIcon = '../../content/icons/CSharpProjectExplorer.png';
-
-    projectExplorerButton.setAttribute('src', projectExplorerIcon);
-    projectExplorerButton.title = "Project Explorer";
-    projectExplorerButton.className = 'projectExplorerButton';
-    projectExplorerButton.onclick = function () { document.getElementById('projectExplorerLink').click(); };
-    editorPane.appendChild(projectExplorerButton);
-
-    var namespaceExplorerButton = document.createElement('img');
-    namespaceExplorerButton.setAttribute('src', '../../content/icons/NamespaceExplorer.png');
-    namespaceExplorerButton.title = "Namespace Explorer";
-    namespaceExplorerButton.className = 'namespaceExplorerButton';
-    namespaceExplorerButton.onclick = showNamespaceExplorer;
-    //editorPane.appendChild(namespaceExplorerButton);
 }
 
 function showDocumentOutline() {
