@@ -2,6 +2,8 @@
 
 interface ICodexWebPage {
     findAllReferences(projectId: string, symbol: string): Promise<void>;
+
+    getUrlForLine(lineNumber: number): string;
 }
 
 interface ICodexEditor {
@@ -12,16 +14,25 @@ interface ICodexEditor {
 
 interface ICodexWebServer {
     getSourceFile(projectId: string, filePath: string): Promise<SourceFile>;
+    getToolTip(projectId: string, symbol: string): Promise<ToolTip>;
+    getDefinitionLocation(projectId: string, symbol: string): Promise<SourceFileOrView>;
 }
 
 class CodexWebServer implements ICodexWebServer {
+    getDefinitionLocation(projectId: string, symbol: string): Promise<SourceFileOrView> {
+        return rpc.getDefinitionLocation(projectId, symbol);
+    }
+
+    getToolTip(projectId: string, symbol: string): Promise<ToolTip> {
+        return rpc.getToolTip(projectId, symbol);
+    }
+
     getSourceFile(projectId: string, filePath: string): Promise<SourceFile> {
-        throw notImplemented();
+        return rpc.getSourceFileContents(projectId, filePath);
     }
 }
 
 class CodexWebPage implements ICodexWebPage {
-    
     private editor: CodexEditor;
     private server: CodexWebServer;
 
@@ -71,8 +82,14 @@ class CodexWebPage implements ICodexWebPage {
         throw notImplemented();
     }
 
-    findAllReferences(projectId: string, symbol: string): Promise<void> {
-        throw notImplemented();
+    getUrlForLine(lineNumber: number): string {
+        var newState = jQuery.extend({}, state.currentState, { lineNumber: lineNumber, rightPaneContent: 'line' });
+        return getUrlForState(newState);
+    }
+
+    async findAllReferences(projectId: string, symbol: string): Promise<void> {
+        const html = await rpc.getFindAllReferencesHtml(projectId, symbol);
+        updateReferences(html);
     }
 }
 

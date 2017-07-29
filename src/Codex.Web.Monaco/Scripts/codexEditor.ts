@@ -1,5 +1,18 @@
 /// <reference path="types.ts" />
-/// <reference path="editor.ts" />
+
+// Required by monaco. Have no idea how to use it without it.
+declare const require: any;
+
+const codexLanguage = 'cdx';
+
+// This is weird, but we can only declare type here, but can't define it.
+// The monaco itself could be not loaded here yet.
+declare class SymbolicUri extends monaco.Uri {
+    projectId: string;
+    symbol: string;
+    definitionResult: SourceFileOrView;
+    model: monaco.editor.IModel;
+}
 
 class CodexEditor implements ICodexEditor {
     private sourceFileModel: SourceFile;
@@ -13,7 +26,7 @@ class CodexEditor implements ICodexEditor {
 
     openFile(sourceFile: SourceFile, targetLocation?: TargetEditorLocation): Promise<void> | void {
         if (!(this.currentTextModel && sourceFile.filePath === this.sourceFileModel.filePath && sourceFile.projectId === this.sourceFileModel.projectId)) {
-            this.currentTextModel = createModelFrom(sourceFile.contents, sourceFile.projectId, sourceFile.filePath);
+            this.currentTextModel = this.createModelFrom(sourceFile.contents, sourceFile.projectId, sourceFile.filePath);
             this.sourceFileModel = sourceFile;
 
             this.editor.setModel(this.currentTextModel);
@@ -94,22 +107,13 @@ class CodexEditor implements ICodexEditor {
         return this.getDefinition(this.sourceFileModel, offset) || this.getReference(this.sourceFileModel, offset);
     }
 
-    private getReferencesHtmlAtPosition(): Promise<string> {
-        let definition = this.getSymbolAtPosition();
-        if (!definition) {
-            return Promise.resolve(undefined);
-        }
-
-        return getFindAllReferencesHtml(definition.projectId, definition.symbol);
-    }
-
-    private getReference(_this: SourceFile, position: number): SymbolSpan {
-        let segmentIndex = ~~(position / _this.segmentLength);
-        if (segmentIndex >= _this.segments.length) {
+    private getReference(sourceFile: SourceFile, position: number): SymbolSpan {
+        let segmentIndex = ~~(position / sourceFile.segmentLength);
+        if (segmentIndex >= sourceFile.segments.length) {
             return undefined;
         }
 
-        let segment = _this.segments[segmentIndex];
+        let segment = sourceFile.segments[segmentIndex];
         if (!segment) {
             return undefined;
         }
@@ -124,13 +128,13 @@ class CodexEditor implements ICodexEditor {
         return undefined;
     }
 
-    private getDefinition(_this: SourceFile, position: number): SymbolSpan {
-        let segmentIndex = ~~(position / _this.segmentLength);
-        if (segmentIndex >= _this.segments.length) {
+    private getDefinition(sourceFile: SourceFile, position: number): SymbolSpan {
+        let segmentIndex = ~~(position / sourceFile.segmentLength);
+        if (segmentIndex >= sourceFile.segments.length) {
             return undefined;
         }
 
-        let segment = _this.segments[segmentIndex];
+        let segment = sourceFile.segments[segmentIndex];
         if (!segment) {
             return undefined;
         }
@@ -174,7 +178,7 @@ class CodexEditor implements ICodexEditor {
                             // Don't need to specify a language, because model carries this information around.
                             readOnly: true,
                             theme: 'codex',
-                            lineNumbers: lineNumberProvider,
+                            lineNumbers: lineNumber => this.lineNumberProvider(lineNumber),
                             scrollBeyondLastLine: true
                         },
                         {
@@ -243,7 +247,7 @@ class CodexEditor implements ICodexEditor {
         if (typeof d === "string") {
             return monaco.Promise.as(null);
         } else {
-            const model = getOrCreateModelFrom(d.contents, d.projectId, d.filePath, 'csharp');
+            const model = this.getOrCreateModelFrom(d.contents, d.projectId, d.filePath, 'csharp');
 
             return monaco.Promise.as({ object: { textEditorModel: model, dispose: () => {} }, dispose: () => {} });
         }
@@ -307,7 +311,7 @@ class CodexEditor implements ICodexEditor {
                     return undefined;
                 }
 
-                let definitionResult = await getDefinitionLocation(reference.projectId, reference.symbol);
+                let definitionResult = await this.webServer.getDefinitionLocation(reference.projectId, reference.symbol);
 
                 // URI is a bit weird in monaco
                 // It strips out /? part of the uri.
@@ -347,7 +351,7 @@ class CodexEditor implements ICodexEditor {
                 uri.projectId = reference.projectId;
                 uri.symbol = reference.symbol;
 
-                return getToolTip(reference.projectId, reference.symbol)
+                return this.webServer.getToolTip(reference.projectId, reference.symbol)
                     .then(res => {
                         if (!res || !res.projectId) {
                             return undefined;
@@ -596,14 +600,13 @@ class CodexEditor implements ICodexEditor {
             // Method that will be executed when the action is triggered.
             // @param editor The editor instance is passed in as a convinience
             run: () => {
-                let referencesHtml = this.getReferencesHtmlAtPosition()
-                    .then(html => {
-                        if (html) {
-                            updateReferences(html);
-                        }
-                    },
-                    e => { }
-                    );
+                let definition = this.getSymbolAtPosition();
+                if (!definition) {
+                    return;
+                    // return Promise.resolve(undefined);
+                }
+                
+                this.webSite.findAllReferences(definition.projectId, definition.symbol);
             }
         });
     }
@@ -636,16 +639,13 @@ class CodexEditor implements ICodexEditor {
     private registerCtrlClickBehaviour(editor: monaco.editor.IStandaloneCodeEditor) {
         editor.onMouseDown(e => {
             if (e.event.ctrlKey) {
-                var target = getTargetAtPosition(editor).then(definitionLocation => {
-                    openEditorForLocation(definitionLocation);
-                },
-                    e => { });
+                this.navigateToTargetAtPosition();
             }
         });
 
         editor.onMouseMove(e => {
             if (e.event.ctrlKey) {
-                let symbol = getSymbolAtPosition(editor, e.target.position);
+                let symbol = this.getSymbolAtPosition(e.target.position);
                 if (symbol) {
                     let start = editor.getModel().getPositionAt(symbol.span.position);
                     let end = editor.getModel().getPositionAt(symbol.span.position + symbol.span.length);
@@ -664,5 +664,31 @@ class CodexEditor implements ICodexEditor {
             }
         });
 
+    }
+
+    // // Transforms lineNumber into a hyperlink
+    private lineNumberProvider(lineNumber: number) {
+        var url = this.webSite.getUrlForLine(lineNumber);
+        return "<a href='" + url + "'>" + lineNumber + "</a>";
+    }
+
+    private async navigateToTargetAtPosition() {
+        let position = this.editor.getPosition();
+
+        let offset = this.currentTextModel.getOffsetAt(position);
+
+        let definition = this.getDefinition(this.sourceFileModel, offset);
+
+        if (definition) {
+            await this.webSite.findAllReferences(definition.projectId, definition.symbol);
+            return;
+        }
+
+        let reference = this.getReference(this.sourceFileModel, offset);
+        if (reference) {
+            let sourceFileOrView = await this.webServer.getDefinitionLocation(reference.projectId, reference.symbol);
+        }
+
+        return Promise.resolve(undefined);
     }
 }

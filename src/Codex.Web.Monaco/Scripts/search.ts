@@ -1,7 +1,6 @@
 /// <reference path="../node_modules/@types/jquery/index.d.ts"/>
 /// <reference path="../node_modules/monaco-editor/monaco.d.ts"/>
 /// <reference path="rpc.ts"/>
-/// <reference path="editor.ts"/>
 /// <reference path="state.ts"/>
 
 declare function Split(x: any, y: any);

@@ -453,7 +453,6 @@
     <TypeScriptCompile Include="Scripts\types.ts" />
     <TypeScriptCompile Include="Scripts\state.ts" />
     <TypeScriptCompile Include="Scripts\rpc.ts" />
-    <TypeScriptCompile Include="Scripts\editor.ts" />
     <TypeScriptCompile Include="Scripts\scripts.ts" />
     <TypeScriptCompile Include="Scripts\search.ts" />
     <Content Include="ScriptsExternal\split.js" />

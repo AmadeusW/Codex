@@ -1,7 +1,7 @@
 /// <reference path="../node_modules/@types/jquery/index.d.ts"/>
 /// <reference path="../node_modules/monaco-editor/monaco.d.ts"/>
 /// <reference path="rpc.ts"/>
-/// <reference path="editor.ts"/>
+/// <reference path="types.ts"/>
 /// <reference path="state.ts"/>
 /// <reference path="search.ts" />
 
@@ -181,13 +181,13 @@ function handleError(e: any) {
 }
 
 function loadRightPaneFrom(url: string) {
-    server<string>(url).then(
+    rpc.server<string>(url).then(
         data => setRightPane(data),
         e => setRightPane("<div class='note'>" + e + "</div>"));
 }
 
 function loadLeftPaneFrom(url: string) {
-    server<string>(url).then(
+    rpc.server<string>(url).then(
         data => setLeftPane(data),
         e => setLeftPane("<div class='note'>" + e + "</div>"));
 }
@@ -212,7 +212,7 @@ function LoadDefinition(project, symbolId) {
 function LoadDefinitionCore(project, symbolId) {
     // TODO: the 'definitionlocation' was removed.
     var url = state.codexWebRootPrefix + "/definitionlocation/" + encodeURI(project) + "/?symbolId=" + encodeURIComponent(symbolId);
-    server(url).then(function (data: any) {
+    rpc.server(url).then(function (data: any) {
         LoadSourceCodeCore(data.projectId, data.filename, symbolId);
         //if (startsWith(data, "<!--Definitions-->")) {
         //    setLeftPane(data);
@@ -291,12 +291,12 @@ function LoadSourceCodeCore(project: string, file: string, symbolId: string, lin
 
 async function FillRightPane(url: string, symbolId: string, lineNumber: number, project: string, file: string) {
     // try {
-        let data = await server(url);
+        let data = await rpc.server(url);
         displayFile(data, symbolId, lineNumber);
 
-        let sourceFileData = await getSourceFileContents(project, file);
+        let sourceFileData = await rpc.getSourceFileContents(project, file);
         if (symbolId) {
-            let definitionSpan = getDefinitionForSymbol(sourceFileData, symbolId);
+            let definitionSpan = rpc.getDefinitionForSymbol(sourceFileData, symbolId);
             if (definitionSpan) {
                 sourceFileData.span = <LineSpan>definitionSpan.span;
             }
@@ -305,7 +305,7 @@ async function FillRightPane(url: string, symbolId: string, lineNumber: number, 
         // createMonacoEditorAndDisplayFileContent(project, file, sourceFileData, lineNumber);
 
         if (!state.codexEditor) {
-            let result = await CodexEditor.createAsync(undefined, undefined, document.getElementById('editorPane'));
+            let result = await CodexEditor.createAsync(new CodexWebServer(), new CodexWebPage(), document.getElementById('editorPane'));
             state.codexEditor = result;
         }
 
@@ -389,7 +389,7 @@ function LoadProjectExplorer(project) {
 
 function LoadProjectExplorerCore(project) {
     var url = "/projectexplorer/" + encodeURI(project) + "/";
-    server(url).then(function (data) {
+    rpc.server(url).then(function (data) {
         setLeftPane(data);
         trackActiveItemInSolutionExplorer();
     }, function (error) {
