@@ -48,7 +48,7 @@ class CodexEditor implements ICodexEditor {
         let range = (
             () => {
                 switch (targetLocation.kind) {
-                    case "number": return this.getRangeAtOffset(targetLocation.value);
+                    case "line": return this.getRangeAtOffset(targetLocation.value);
                     case "symbol": return this.getSymbolRange(targetLocation.value);
                     case "span": return this.getRangeAtSpan(targetLocation.value);
 

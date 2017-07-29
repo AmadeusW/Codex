@@ -450,6 +450,7 @@
     <Content Include="Scripts\tsconfig.json" />
     <TypeScriptCompile Include="node_modules\%40types\jquery\index.d.ts" />
     <TypeScriptCompile Include="Scripts\codexEditor.ts" />
+    <TypeScriptCompile Include="Scripts\viewModel.ts" />
     <TypeScriptCompile Include="Scripts\types.ts" />
     <TypeScriptCompile Include="Scripts\state.ts" />
     <TypeScriptCompile Include="Scripts\rpc.ts" />

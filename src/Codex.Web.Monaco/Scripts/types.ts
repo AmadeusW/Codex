@@ -1,5 +1,7 @@
 /// <reference path="../node_modules/@types/jquery/index.d.ts"/>
 
+type StringMap = { [key:string]:string; };
+
 interface ICodexWebPage {
     findAllReferences(projectId: string, symbol: string): Promise<void>;
 
@@ -186,34 +188,6 @@ class CodexWebPage implements ICodexWebPage {
 function notImplemented(): Error {
     throw new Error("Method not implemented.");
 }
-
-interface IViewModel {
-    right: RightPaneViewModel;
-    left: ILeftPaneViewModel;
-}
-
-interface ILeftPaneViewModel {
-
-}
-
-interface OverviewViewModel {
-    kind: 'Overview';
-}
-
-type LineNumber = number;// {kind: 'number'; value: number}
-type Symbol = { symbolId: string, projectId: string };//kind: 'symbol'; value: string}
-type TargetEditorLocation = {kind: 'number'; value: LineNumber} | {kind: 'symbol'; value: Symbol} | {kind: 'span'; value: Span};
-
-interface FileViewModel {
-    kind: 'SourceFile';
-    //\
-    sourceFile: SourceFile | undefined;
-    projectId: string;
-    filePath: string;
-    targetLocation: TargetEditorLocation;
-}
-
-type RightPaneViewModel = OverviewViewModel | FileViewModel;
 
 interface Span {
     position: number;

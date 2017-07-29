@@ -43,5 +43,5 @@ interface CodexWebState {
 
 function main() {
     state.WebPage = new CodexWebPage();
-    state.WebPage.setViewModel({left: undefined, right: {kind: 'Overview'}});
+    state.WebPage.setViewModel({left: undefined, right: new OverviewViewModel()});
 }

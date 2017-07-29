@@ -21,6 +21,7 @@ namespace WebUI
                 "~/Scripts/scripts.js",
                 "~/Scripts/rpc.js",
                 "~/Scripts/state.js",
+                "~/Scripts/viewModel.js",
                 "~/Scripts/codexEditor.js",
                 "~/Scripts/types.js"
                 ));
