@@ -31,6 +31,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documents", "Documents", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codex.Web.Monaco", "src\Codex.Web.Monaco\Codex.Web.Monaco.csproj", "{BC4A8ABD-8848-4544-9F7C-FC98E3A89DF2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codex.Analysis.External", "Codex.Analysis.External\Codex.Analysis.External.csproj", "{CD028A30-EF26-44DE-884B-6D9C41C39D64}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -127,6 +129,14 @@ Global
 		{BC4A8ABD-8848-4544-9F7C-FC98E3A89DF2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BC4A8ABD-8848-4544-9F7C-FC98E3A89DF2}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{BC4A8ABD-8848-4544-9F7C-FC98E3A89DF2}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{CD028A30-EF26-44DE-884B-6D9C41C39D64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD028A30-EF26-44DE-884B-6D9C41C39D64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD028A30-EF26-44DE-884B-6D9C41C39D64}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{CD028A30-EF26-44DE-884B-6D9C41C39D64}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{CD028A30-EF26-44DE-884B-6D9C41C39D64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD028A30-EF26-44DE-884B-6D9C41C39D64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD028A30-EF26-44DE-884B-6D9C41C39D64}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{CD028A30-EF26-44DE-884B-6D9C41C39D64}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
