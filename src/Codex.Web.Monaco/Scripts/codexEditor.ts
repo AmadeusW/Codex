@@ -672,10 +672,10 @@ class CodexEditor implements ICodexEditor {
 
     }
 
-    // // Transforms lineNumber into a hyperlink
+    // Transforms lineNumber into a hyperlink
     private lineNumberProvider(lineNumber: number) {
         var url = this.webSite.getUrlForLine(lineNumber);
-        return "<a href='" + url + "'>" + lineNumber + "</a>";
+        return "<a href='" + url + "' onclick='setURL(this); return false;'>" + lineNumber + "</a>";
     }
 
     private async navigateToTargetAtPosition() {
@@ -697,4 +697,11 @@ class CodexEditor implements ICodexEditor {
 
         return Promise.resolve(undefined);
     }
+}
+
+// Callback method from the UI. Updates the browser's URL without following it.
+function setURL(element: any) {
+    // assume element is an anchor.
+    var url = element.href;
+    history.pushState(null, null, url);
 }
