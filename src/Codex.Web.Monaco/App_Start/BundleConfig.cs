@@ -23,7 +23,9 @@ namespace WebUI
                 "~/Scripts/state.js",
                 "~/Scripts/viewModel.js",
                 "~/Scripts/codexEditor.js",
-                "~/Scripts/types.js"
+                "~/Scripts/types.js",
+                "~/Scripts/actions.js",
+                "~/Scripts/page.js"
                 ));
 
             // Use the development version of Modernizr to develop with and learn from. Then, when you're

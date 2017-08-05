@@ -14,7 +14,7 @@
             </div>
         </div>
 
-        <div id="bottomPaneHidden" class="dH">
+        <div id="bottomPane" class="dH">
             <table style="width: 100%">
                 <tbody>
                     <tr>
@@ -63,8 +63,6 @@
         leftPaneContent: @Html.Raw(Model.leftPaneContent),
         rightPaneContent: @Html.Raw(Model.rightPaneContent),
     };
-    ensureSearchBox();
-    DisplayState(initialState);
-    ReplaceCurrentState();
-    var selectedFile = null;
+
+    codexInit(initialState);
 </script>

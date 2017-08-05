@@ -40,7 +40,7 @@
                                 {
                                     if (!string.IsNullOrEmpty(searchResult.File))
                                     {
-                                        <a onclick="LoadSourceCode('@searchResult.Symbol.ProjectId.AsJavaScriptStringEncoded()', '@searchResult.File.AsJavaScriptStringEncoded()', '@searchResult.Symbol.Id');return false;" href="/?query=@HttpUtility.UrlEncode(Model.QueryText)&rightProject=@searchResult.Symbol.ProjectId&rightSymbol=@searchResult.Symbol.Id">
+                                        <a onclick="Actions.GoToDef('@searchResult.Symbol.ProjectId.AsJavaScriptStringEncoded()', '@searchResult.File.AsJavaScriptStringEncoded()', '@searchResult.Symbol.Id');return false;" href="/?query=@HttpUtility.UrlEncode(Model.QueryText)&rightProject=@searchResult.Symbol.ProjectId&rightSymbol=@searchResult.Symbol.Id">
                                             <div class="resultItem">
                                                 <img src="/content/icons/@searchResult.Glyph" height="16" width="16" /><div class="resultKind">@searchResult.Symbol.Kind.ToLowerInvariant()</div><div class="resultName">@searchResult.Symbol.ShortName</div><div class="resultDescription">@searchResult.DisplayName</div>
                                             </div>

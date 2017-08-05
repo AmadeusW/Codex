@@ -164,7 +164,7 @@ class CodexEditor implements ICodexEditor {
     }
 
     private createMonacoEditor(): Promise<monaco.editor.IStandaloneCodeEditor> {
-        console.log("createing a monaco editor");
+        console.log("creating monaco editor");
 
         require.config({ paths: { 'vs': 'node_modules/monaco-editor/dev/vs' } });
 

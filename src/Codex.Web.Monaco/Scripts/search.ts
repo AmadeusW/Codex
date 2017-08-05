@@ -6,31 +6,6 @@
 declare function Split(x: any, y: any);
 declare function escape(x: any);
 
-function onBodyLoad() {
-
-    var anchor = document.location.hash;
-    if (anchor && !document.location.search && document.location.pathname === "/") {
-        top.location.replace("http://ddindex/" + anchor);
-        return;
-    }
-
-    // https://github.com/nathancahill/Split.js
-    Split(['#leftPane', '#rightPane'], {
-        sizes: ['504px', 'calc(100% - 504px)'],
-        gutterSize: 20,
-        minSize: 1,
-        cursor: 'col-resize'
-    });
-
-    ensureSearchBox();
-
-    // TODO: why href is missing?
-    var link = <any>document.getElementById("feedbackButtonLink");
-    link.href = "mailto:" + "codexteam" + "@" + "microsoft" + '.' + "com";
-
-    window.onpopstate = OnWindowPopState;
-}
-
 function ensureSearchBox() {
     if (typeof state.searchBox === "object" && state.searchBox != null) {
         return;
