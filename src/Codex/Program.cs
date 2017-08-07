@@ -18,7 +18,7 @@ using Codex.Storage;
 
 namespace Codex.Application
 {
-    class Program
+    public class Program
     {
         // Uncomment if you need to use it locally
         static string url = "http://localhost:9200";
@@ -39,7 +39,7 @@ namespace Codex.Application
             }
         }
 
-        static void RunRepoImporter(params string[] args)
+        public static void RunRepoImporter(params string[] args)
         {
             string repoName = args[0];
             string rootDirectory = args[1];

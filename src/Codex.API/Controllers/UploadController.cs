@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Codex.API.Logic;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -16,9 +17,15 @@ namespace Codex.API.Controllers
         }
 
         // GET: api/Upload/5
-        public string Get(int id)
+        public string Get(string name, string path, string script)
         {
-            return "value";
+            using (var upload = new UploadAction())
+            {
+                upload.MakeLocalCopy(name, path);
+                upload.ExecuteScript(script);
+                upload.ImportToCodex(name);
+                return "OK";
+            }
         }
 
         // POST: api/Upload
