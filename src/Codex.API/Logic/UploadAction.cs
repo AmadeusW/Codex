@@ -18,6 +18,7 @@ namespace Codex.API.Logic
         internal void MakeLocalCopy(string name, string path)
         {
             temporaryPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            Debug.WriteLine($"Uploading source code into temporary location {temporaryPath}");
         }
 
         internal void ExecuteScript(string script)
@@ -30,6 +31,8 @@ namespace Codex.API.Logic
             if (!File.Exists(scriptPath))
                 throw new ArgumentException($"Could not locate {scriptPath}");
 
+            Debug.WriteLine($"Executing {scriptPath}");
+
             var startInfo = new ProcessStartInfo(scriptPath)
             {
                 UseShellExecute = true
@@ -40,11 +43,13 @@ namespace Codex.API.Logic
 
         internal void ImportToCodex(string name)
         {
+            Debug.WriteLine($"Importing {name}");
             Codex.Application.Program.RunRepoImporter(name, temporaryPath);
         }
 
         public void Dispose()
         {
+            Debug.WriteLine($"Disposing of the upload artifacts");
             if (Directory.Exists(temporaryPath))
             {
                 try

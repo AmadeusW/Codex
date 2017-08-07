@@ -24,6 +24,7 @@ namespace Codex.API.Controllers
                 upload.MakeLocalCopy(name, path);
                 upload.ExecuteScript(script);
                 upload.ImportToCodex(name);
+                System.Diagnostics.Debug.WriteLine($"Upload successful");
                 return "OK";
             }
         }
