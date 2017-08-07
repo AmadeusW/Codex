@@ -56,10 +56,20 @@ namespace Codex.API.Logic
         internal void ImportToCodex(string name)
         {
             Debug.WriteLine($"Importing {name}");
-
+            /*
             string workingDirectory = Directory.GetCurrentDirectory();
             Directory.SetCurrentDirectory(temporaryPath);
             Codex.Application.Program.RunRepoImporter(name, temporaryPath);
+            */
+            string codexLocation = @"C:\git\Codex\src\Codex.API\bin\Codex.exe";
+            var startInfo = new ProcessStartInfo(codexLocation)
+            {
+                UseShellExecute = true,
+                Arguments = $"{name} {temporaryPath}",
+                WorkingDirectory = temporaryPath
+            };
+            var scriptProcess = Process.Start(startInfo);
+            scriptProcess.WaitForExit((int)TimeSpan.FromMinutes(5).TotalMilliseconds);
         }
 
         public void Dispose()
