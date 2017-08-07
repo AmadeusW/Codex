@@ -304,6 +304,13 @@ namespace Codex.ObjectModel
         /// which are added in a shared context and need this for deduplication)
         /// </summary>
         public string Uid { get; set; }
+
+        public string Comment { get; set; }
+
+        public string TypeName { get; set; }
+
+        public string DeclarationName { get; set; }
+
         public string DisplayName { get; set; }
         private string shortName;
         public string ShortName

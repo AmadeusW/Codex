@@ -465,7 +465,10 @@ namespace Codex.Analysis
                 ContainerQualifiedName = containerQualifierName,
                 Kind = GetSymbolKind(symbol),
                 Glyph = symbol.GetGlyph(),
-                SymbolDepth = symbol.GetSymbolDepth()
+                SymbolDepth = symbol.GetSymbolDepth(),
+                Comment = symbol.GetDocumentationCommentXml(),
+                DeclarationName = symbol.ToDeclarationName(),
+                TypeName = GetTypeName(symbol)
             };
 
             return boundSymbol;
@@ -661,6 +664,29 @@ namespace Codex.Analysis
             symbol = ResolveAccessorParameter(symbol);
 
             return symbol;
+        }
+
+        private static string GetTypeName(ISymbol symbol)
+        {
+            if (symbol.Kind == SymbolKind.Method)
+            {
+                // Case: Constructor
+                IMethodSymbol methodSymbol = symbol as IMethodSymbol;
+                return methodSymbol.ReturnType?.ToDisplayString(DisplayFormats.TypeNameDisplayFormat);
+
+            }
+            else if (symbol.Kind == SymbolKind.Property)
+            {
+                IPropertySymbol propertySymbol = symbol as IPropertySymbol;
+                return propertySymbol.Type?.ToDisplayString(DisplayFormats.TypeNameDisplayFormat);
+            }
+            else if (symbol.Kind == SymbolKind.Field)
+            {
+                IFieldSymbol fieldSymbol = symbol as IFieldSymbol;
+                return fieldSymbol.Type?.ToDisplayString(DisplayFormats.TypeNameDisplayFormat);
+            }
+
+            return null;
         }
 
         private static string GetDocumentationCommentId(ISymbol symbol)

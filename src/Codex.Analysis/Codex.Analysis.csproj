@@ -109,6 +109,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Codex.Analysis.External\Codex.Analysis.External.csproj">
+      <Project>{cd028a30-ef26-44de-884b-6d9c41c39d64}</Project>
+      <Name>Codex.Analysis.External</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Codex.Sdk\Codex.Sdk.csproj">
       <Project>{2322a932-05f4-4931-8547-71377c6ab49e}</Project>
       <Name>Codex.Sdk</Name>
@@ -118,6 +122,8 @@
     <Compile Include="AnalysisServices.cs" />
     <Compile Include="AnalyzedProjectContext.cs" />
     <Compile Include="BoundSourceFileBuilder.cs" />
+    <Compile Include="External\CodexTypeAdapter.cs" />
+    <Compile Include="External\ExternalRepoFileAnalyzer.cs" />
     <Compile Include="FileSystems\BinaryFileSystemFilter.cs" />
     <Compile Include="FileSystems\DirectoryFilter.cs" />
     <Compile Include="FileSystems\FileSystem.cs" />

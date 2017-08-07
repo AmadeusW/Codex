@@ -292,7 +292,10 @@ namespace Codex.Storage
                 ExcludeFromDefaultSearch = symbol.ExcludeFromDefaultSearch,
                 Glyph = symbol.Glyph == Glyph.Unknown ? null : symbol.Glyph.ToString(),
                 SymbolDepth = symbol.SymbolDepth,
-                IsImplicitlyDeclared = symbol.IsImplicitlyDeclared
+                IsImplicitlyDeclared = symbol.IsImplicitlyDeclared,
+                ShortDisplayName =  symbol.DeclarationName,
+                Comment =  symbol.Comment,
+                TypeName = symbol.TypeName
             };
 
             return result;
@@ -330,7 +333,10 @@ namespace Codex.Storage
                 Kind = symbolModel.Kind,
                 Glyph = ParseEnumOrDefault(symbolModel.Glyph, Glyph.Unknown),
                 SymbolDepth = symbolModel.SymbolDepth,
-                IsImplicitlyDeclared = symbolModel.IsImplicitlyDeclared
+                IsImplicitlyDeclared = symbolModel.IsImplicitlyDeclared,
+                DeclarationName = symbolModel.ShortDisplayName,
+                Comment = symbolModel.Comment,
+                TypeName = symbolModel.TypeName
             };
         }
 

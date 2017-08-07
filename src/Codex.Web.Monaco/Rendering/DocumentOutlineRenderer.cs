@@ -39,7 +39,7 @@ namespace WebUI.Rendering
                 int nextIndex = current + 1;
                 var definition = boundSourceFile.Definitions[current];
 
-                if (string.Equals(definition.Definition.Kind, nameof(SymbolKinds.File), StringComparison.OrdinalIgnoreCase))
+                if (definition.Definition.IsImplicitlyDeclared)
                 {
                     continue;
                 }

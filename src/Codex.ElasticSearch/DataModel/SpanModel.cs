@@ -85,6 +85,7 @@ namespace Codex.Storage.DataModel
         }
     }
 
+
     public class SpanModel
     {
         /// <summary>
@@ -209,6 +210,11 @@ namespace Codex.Storage.DataModel
 
         [Sortword]
         public string[] Tags { get; set; }
+
+        /// <summary>
+        /// Indicates that the search span represents a referenced symbol not an actual declaration
+        /// </summary>
+        public bool IsReferencedSymbol { get; set; }
 
         public DefinitionSpanModel Span { get; set; }
     }

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Codex.Analysis;
+using Codex.Analysis.External;
 using Codex.Analysis.Files;
 using Codex.Analysis.FileSystems;
 using Codex.Analysis.Managed;
@@ -29,7 +30,7 @@ namespace Codex.Application
 
         static void Main(string[] args)
         {
-            if (args.Length != 2) throw new ArgumentException("Usage: codex repoName repoPath");
+            if (args.Length != 2 && args.Length != 3) throw new ArgumentException("Usage: codex repoName repoPath solutionPath?");
             RunRepoImporter(args);
 
             if (!analysisOnly)
@@ -133,6 +134,7 @@ namespace Codex.Application
                             ".config",
                             ".settings"),
                         })
+                        //new ExternalRepoFileAnalyzer(new[] { @"d:\temp\Codex" }), // This indexer allows an external tool to write out codex spans for importing. We sill need to add support for a 'marker' file so we don't have to pass a folder.
                     {
                         AnalysisTarget = analysisTarget,
                         Logger = logger,
