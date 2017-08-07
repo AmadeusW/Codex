@@ -8,6 +8,8 @@ using System.Web.Http;
 
 namespace Codex.API.Controllers
 {
+    // Debug this URL: http://localhost:64766/api/Upload/?name=Platform&path=\\cpvsbuild\drops\Editor\VS-Platform-Full-Official\master\1708.0704\drop&script=
+    // or this: http://localhost:64766/api/Upload/?name=Platform&path=C:\git\platform&script=Restore.cmd&solution=src\Platform.sln
     public class UploadController : ApiController
     {
         // GET: api/Upload
@@ -17,13 +19,13 @@ namespace Codex.API.Controllers
         }
 
         // GET: api/Upload/?name=Platform&path=//cpvsbuild/drops/Editor/VS-Platform-Full-Official/master/1708.0601/drop/public&script=
-        public string Get(string name, string path, string script)
+        public string Get(string name, string path, string solution, string script)
         {
             using (var upload = new UploadAction())
             {
                 upload.MakeLocalCopy(name, path);
                 upload.ExecuteScript(script);
-                upload.ImportToCodex(name);
+                upload.ImportToCodex(name, solution);
                 System.Diagnostics.Debug.WriteLine($"Upload successful");
                 return "OK";
             }
