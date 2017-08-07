@@ -16,7 +16,7 @@ namespace Codex.API.Controllers
             return new string[] { "value1", "value2" };
         }
 
-        // GET: api/Upload/5
+        // GET: api/Upload/?name=Platform&path=//cpvsbuild/drops/Editor/VS-Platform-Full-Official/master/1708.0601/drop/public&script=
         public string Get(string name, string path, string script)
         {
             using (var upload = new UploadAction())

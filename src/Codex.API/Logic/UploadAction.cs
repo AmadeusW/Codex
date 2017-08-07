@@ -19,6 +19,18 @@ namespace Codex.API.Logic
         {
             temporaryPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             Debug.WriteLine($"Uploading source code into temporary location {temporaryPath}");
+            Directory.CreateDirectory(temporaryPath);
+            var source = new DirectoryInfo(path);
+            var destination = new DirectoryInfo(temporaryPath);
+            CopyFilesRecursively(source, destination);
+        }
+
+        public static void CopyFilesRecursively(DirectoryInfo source, DirectoryInfo target)
+        {
+            foreach (DirectoryInfo dir in source.GetDirectories())
+                CopyFilesRecursively(dir, target.CreateSubdirectory(dir.Name));
+            foreach (FileInfo file in source.GetFiles())
+                file.CopyTo(Path.Combine(target.FullName, file.Name));
         }
 
         internal void ExecuteScript(string script)
@@ -44,6 +56,9 @@ namespace Codex.API.Logic
         internal void ImportToCodex(string name)
         {
             Debug.WriteLine($"Importing {name}");
+
+            string workingDirectory = Directory.GetCurrentDirectory();
+            Directory.SetCurrentDirectory(temporaryPath);
             Codex.Application.Program.RunRepoImporter(name, temporaryPath);
         }
 
